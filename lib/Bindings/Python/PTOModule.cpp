@@ -35,7 +35,9 @@ static py::list shapeToPyList(const int64_t *data, intptr_t n) {
 }
 
 void populatePTODialectSubmodule(pybind11::module &m);
-
+void populatePTODialectSubmodule(pybind11::module &m) {
+  (void)m;
+}
 PYBIND11_MODULE(_pto, m) {
     m.doc() = "PTO dialect Python bindings (pybind11).";
 

@@ -1,35 +1,85 @@
-# =========================================================
-# Python Extension Configuration (Pybind11 Version)
-# =========================================================
+# lib/Bindings/Python/CMakeLists.txt
 
-# 1. 查找依赖
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 
-# 2. 创建模块 (使用 pybind11)
-pybind11_add_module(_pto
+include(TableGen)
+include(AddMLIR)
+
+# ---- 1) Python native extension: mlir._mlir_libs._pto ----
+pybind11_add_module(_pto MODULE
   PTOModule.cpp
 )
 
-# 3. 链接依赖
-target_link_libraries(_pto PRIVATE
-  PTOIR                       # 您的 Dialect 核心库
-  PTOCAPI                     # 您的 C API 库
-  MLIRIR                      # MLIR 核心
-  MLIRBindingsPythonHeaders   # 包含 PybindAdaptors.h 的库
-)
-
-# [关键修复] 显式添加 PybindAdaptors.h 所在的源码路径
-# 假设 LLVM_SOURCE_DIR 是 LLVM 的根目录，我们需要指向 mlir/include
 target_include_directories(_pto PRIVATE
-  ${LLVM_INCLUDE_DIRS}
-  ${MLIR_INCLUDE_DIRS}
+  ${CMAKE_SOURCE_DIR}/include
 )
 
-# 4. 设置编译定义
-target_compile_definitions(_pto PRIVATE
-  MLIR_CAPI_BUILDING_LIBRARY=1
+target_link_options(_pto PRIVATE)
+
+target_link_libraries(_pto PRIVATE
+
+  PTOCAPI
+  PTOIR
+  MLIRIR
+  MLIRCAPIIR
+  MLIRSupport
+  MLIRArithDialect
+  MLIRDestinationStyleOpInterface
+  MLIRInferTypeOpInterface
+  MLIRSideEffectInterfaces
+  MLIRCallInterfaces
+  MLIRControlFlowInterfaces
+  MLIRLoopLikeInterface
+  MLIRViewLikeInterface
+  MLIRFunctionInterfaces
 )
 
-# 5. 设置输出名称
-set_target_properties(_pto PROPERTIES OUTPUT_NAME "_pto")
+# 关键：放到 mlir/_mlir_libs 下（匹配 MLIR dialect python 的 import 习惯）
+set_target_properties(_pto PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python/mlir/_mlir_libs"
+)
+
+install(TARGETS _pto
+  LIBRARY DESTINATION "${MLIR_PYTHON_PACKAGE_DIR}/mlir/_mlir_libs"
+)
+
+# ---- 2) Generate ODS Python op bindings: _pto_ops_gen.py ----
+set(PTO_TD_DIR "${CMAKE_SOURCE_DIR}/include/PTO/IR")
+set(LLVM_TARGET_DEFINITIONS ${PTO_TD_DIR}/PTOOps.td)
+
+mlir_tablegen(_pto_ops_gen.py
+  -gen-python-op-bindings
+  --bind-dialect=pto
+)
+
+add_public_tablegen_target(PTOPythonGen)
+add_dependencies(_pto PTOPythonGen)
+
+# ---- 3) Copy generated python + handwritten pto.py into build/python ----
+set(PTO_PY_SRC "${CMAKE_SOURCE_DIR}/python/mlir/dialects/pto.py")
+
+add_custom_command(TARGET _pto POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/python/mlir/dialects"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "${PTO_PY_SRC}"
+          "${CMAKE_BINARY_DIR}/python/mlir/dialects/pto.py"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "${CMAKE_CURRENT_BINARY_DIR}/_pto_ops_gen.py"
+          "${CMAKE_BINARY_DIR}/python/mlir/dialects/_pto_ops_gen.py"
+  VERBATIM
+)
+
+install(FILES
+  "${PTO_PY_SRC}"
+  "${CMAKE_CURRENT_BINARY_DIR}/_pto_ops_gen.py"
+  DESTINATION mlir/dialects
+)
+
+add_custom_command(TARGET _pto POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory
+          "${CMAKE_BINARY_DIR}/python/mlir/_mlir_libs"
+  VERBATIM
+)
+
+
