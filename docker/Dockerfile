@@ -1,4 +1,6 @@
-FROM quay.io/pypa/manylinux_2_34_x86_64
+ARG ARCH=x86_64
+
+FROM quay.io/pypa/manylinux_2_34_${ARCH}
 
 # NOTE: change $PY_VER for different Python versions (3.8 - 3.14 available)
 ARG PY_VER=cp312-cp312
@@ -38,7 +40,7 @@ RUN ninja -C $LLVM_BUILD_DIR
 
 # build ptoas
 WORKDIR $WORKSPACE_DIR
-RUN git clone -b wheel https://github.com/learning-chip/PTOAS.git
+RUN git clone https://github.com/learning-chip/PTOAS.git
 # TODO: tag git commit of PTOAS repo
 
 WORKDIR $PTO_SOURCE_DIR
@@ -74,7 +76,7 @@ RUN python setup.py bdist_wheel
 
 # fix missing so
 RUN export LD_LIBRARY_PATH=$LLVM_BUILD_DIR/lib:$PTO_INSTALL_DIR/lib:$LD_LIBRARY_PATH \
-    && auditwheel repair --plat manylinux_2_34_x86_64 dist/ptoas*.whl
+    && auditwheel repair --plat manylinux_2_34_${ARCH} dist/ptoas*.whl
 
 RUN pip install wheelhouse/ptoas*.whl
 
