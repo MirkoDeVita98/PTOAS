@@ -151,26 +151,19 @@ WORKDIR /sources
 RUN git clone https://gitcode.com/cann/pto-isa.git \
     && cd pto-isa && git checkout $PTO_ISA_COMMIT
 ENV PTO_LIB_PATH=/sources/pto-isa
+ENV BISHENG_OPTS="-I${PTO_LIB_PATH}/include/pto \
+    -fPIC -shared -O2 -std=c++17 \
+    --npu-arch=dav-2201 -DMEMORY_BASE"
 
 WORKDIR /sources/test/Abs
 RUN (echo '#if __CCE_AICORE__ == 220 && defined(__DAV_C220_VEC__)'; cat abs.cpp; echo '#endif') \
     > abs.cpp.tmp && mv abs.cpp.tmp abs.cpp
-RUN bisheng \
-    -I${PTO_LIB_PATH}/include/pto \
-    -fPIC -shared -O2 -std=c++17 \
-    --npu-arch=dav-2201 -DMEMORY_BASE \
-    ./abs.cpp \
-    -o ./abs_kernel.so
+RUN bisheng $BISHENG_OPTS ./abs.cpp -o ./abs_kernel.so
 
 WORKDIR /sources/test/MatMul
 RUN (echo '#if __CCE_AICORE__ == 220 && defined(__DAV_C220_CUBE__)'; cat tmatmulk.cpp; echo '#endif') \
     > tmatmulk.cpp.tmp && mv tmatmulk.cpp.tmp tmatmulk.cpp
-RUN bisheng \
-    -I${PTO_LIB_PATH}/include/pto \
-    -fPIC -shared -O2 -std=c++17 \
-    --npu-arch=dav-2201 -DMEMORY_BASE \
-    ./tmatmulk.cpp \
-    -o ./matmul_kernel.so
+RUN bisheng $BISHENG_OPTS ./tmatmulk.cpp -o ./matmul_kernel.so
 
 # add torch_npu to faciliate on-device testing during `docker run` (not used at build stage)
 # for available versions see https://pypi.org/project/torch-npu/#history
