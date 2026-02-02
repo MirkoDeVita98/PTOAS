@@ -101,7 +101,11 @@ def AllocTileOp : PTO_Op<"alloc_tile", [AttrSizedOperandSegments]> {
 
   let results = (outs TileBufType:$result);
 
-  let hasCustomAssemblyFormat = 1;
+  let assemblyFormat = [{
+    (`valid_row` `=` $valid_row^)? 
+    (`valid_col` `=` $valid_col^)?
+     attr-dict `:` qualified(type($result))
+  }];
 
   let extraClassDeclaration = [{
     ::mlir::LogicalResult verify();

@@ -21,7 +21,7 @@ from .._mlir_libs._pto import (
     PadValue,
     PadValueAttr,
     RoundMode,
-    RoundModeAttr，
+    RoundModeAttr,
     CmpMode,
     CmpModeAttr
 )
