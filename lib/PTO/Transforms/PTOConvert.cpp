@@ -1935,7 +1935,7 @@ struct PTOCmpToEmitC : public OpConversionPattern<pto::CmpOp_DPS> {
         loc,
         TypeRange{},
         "TCMP",
-        /*args=*/argsAttr,
+        /*args=*/ArrayAttr{},
         /*templateArgs=*/ArrayAttr{},
         /*operands=*/ValueRange{dst, src0, src1, modeVal});
 

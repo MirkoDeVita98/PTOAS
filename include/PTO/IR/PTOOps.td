@@ -101,11 +101,7 @@ def AllocTileOp : PTO_Op<"alloc_tile", [AttrSizedOperandSegments]> {
 
   let results = (outs TileBufType:$result);
 
-  let assemblyFormat = [{
-    (`valid_row` `=` $valid_row^)? 
-    (`valid_col` `=` $valid_col^)?
-     attr-dict `:` qualified(type($result))
-  }];
+  let hasCustomAssemblyFormat = 1;
 
   let extraClassDeclaration = [{
     ::mlir::LogicalResult verify();
@@ -369,7 +365,6 @@ def TTransOp : PTO_TOp<"ttrans", [
     `ins` `(` $src `,` $tmp `:` qualified(type($src)) `,` qualified(type($tmp)) `)`
     `outs` `(` $dst `:` qualified(type($dst) ) `)`
     attr-dict
-    (`->` qualified(type($result))^)?
   }];
 
   let hasVerifier = 1;
@@ -574,8 +569,9 @@ def TMatmulMxOp : PTO_TOp<"tmatmul.mx", [
 
   let extraClassDeclaration = [{
     static StringRef getIntrinsicName() { return "TMATMUL_MX"; }
-	::mlir::pto::PIPE getPipe() {
-      return ::mlir::pto::PIPE::PIPE_M; 
+    ::mlir::pto::PIPE getPipe() {
+      return ::mlir::pto::PIPE::PIPE_M;
+    }
   }];
 }
 
@@ -607,9 +603,9 @@ def TMatmulMxAccOp : PTO_TOp<"tmatmul.mx.acc", [
 
   let extraClassDeclaration = [{
     static StringRef getIntrinsicName() { return "TMATMUL_MX_ACC"; }
- 	::mlir::pto::PIPE getPipe() {
-        return ::mlir::pto::PIPE::PIPE_M; 
-      }
+    ::mlir::pto::PIPE getPipe() {
+      return ::mlir::pto::PIPE::PIPE_M;
+    }
   }];
 }
 

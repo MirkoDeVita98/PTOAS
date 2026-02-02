@@ -599,6 +599,79 @@ LogicalResult LoadOp::verify() {
   return success();
 }
 
+ParseResult AllocTileOp::parse(OpAsmParser &parser, OperationState &result) {
+  OpAsmParser::UnresolvedOperand valid_rowOperand, valid_colOperand;
+  bool hasValidRow = false, hasValidCol = false;
+
+  // 解析可选的 valid_row = <operand>
+  if (succeeded(parser.parseOptionalKeyword("valid_row"))) {
+    if (parser.parseEqual() || parser.parseOperand(valid_rowOperand))
+      return failure();
+    hasValidRow = true;
+  }
+
+  // 解析可选的 valid_col = <operand>
+  if (succeeded(parser.parseOptionalKeyword("valid_col"))) {
+    if (parser.parseEqual() || parser.parseOperand(valid_colOperand))
+      return failure();
+    hasValidCol = true;
+  }
+
+  // 解析 `:`
+  if (parser.parseColon())
+    return failure();
+
+  // 解析属性字典（格式: <loc=ub, dtype=f32, rows=32, cols=32, ...>）
+  // 使用 TileBufType::parse 来解析类型，因为它知道如何解析属性字典格式
+  Type resultType = TileBufType::parse(parser);
+  if (!resultType)
+    return failure();
+
+  // 解析属性字典（TileBufType::parse 已经解析了类型相关的属性）
+  // 但可能还有其他属性需要解析
+  if (parser.parseOptionalAttrDict(result.attributes))
+    return failure();
+
+  // 设置结果类型
+  result.addTypes(resultType);
+
+  // 解析 operands
+  Type indexType = parser.getBuilder().getIndexType();
+  if (hasValidRow && parser.resolveOperand(valid_rowOperand, indexType, result.operands))
+    return failure();
+  if (hasValidCol && parser.resolveOperand(valid_colOperand, indexType, result.operands))
+    return failure();
+
+  // 设置 operandSegmentSizes
+  result.getOrAddProperties<AllocTileOp::Properties>().operandSegmentSizes = 
+      {static_cast<int32_t>(hasValidRow ? 1 : 0), static_cast<int32_t>(hasValidCol ? 1 : 0)};
+
+  return success();
+}
+
+void AllocTileOp::print(OpAsmPrinter &p) {
+  // 打印可选的 valid_row
+  if (getValidRow()) {
+    p << " valid_row = " << getValidRow();
+  }
+
+  // 打印可选的 valid_col
+  if (getValidCol()) {
+    p << " valid_col = " << getValidCol();
+  }
+
+  // 打印 `:`
+  p << " : ";
+
+  // 打印类型（TileBufType 会打印为 <loc=ub, dtype=f32, ...> 格式）
+  p << getResult().getType();
+
+  // 打印其他属性（如果有）
+  SmallVector<StringRef> elidedAttrs;
+  elidedAttrs.push_back("operandSegmentSizes");
+  p.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
+}
+
 LogicalResult AllocTileOp::verify() {
   auto ty = getResult().getType(); // TileBufType
 
@@ -630,7 +703,6 @@ LogicalResult AllocTileOp::verify() {
 
   return success();
 }
-
 
 LogicalResult LoadDpsOp::verify() {
   Type srcType = getSrc().getType();
