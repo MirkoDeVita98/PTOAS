@@ -45,7 +45,7 @@ class PTO_TOp<string mnemonic, list<Trait> traits = []>
 
 class PTO_DpsOp<string mnemonic, list<Trait> traits = []>
     : Op<PTO_Dialect, mnemonic, traits # [DestinationStyleOpInterface]> {
-  code extraClassDeclaration = [{
+  let extraClassDeclaration = [{
     ::mlir::MutableOperandRange getDpsInitsMutable() {
       return getDstMutable();
     }
@@ -1696,7 +1696,10 @@ def PTO_MScatterOp : PTO_Op<"mscatter", []> {
 // dst = abs(src) elementwise
 //===----------------------------------------------------------------------===//
 
-def PTO_AbsOp_DPS : PTO_DpsOp<"abs_dps", []> {
+def PTO_AbsOp_DPS : PTO_DpsOp<"abs_dps", [
+  OpPipeInterface,
+  DeclareOpInterfaceMethods<MemoryEffectsOpInterface>
+]> {
   let summary = "Elementwise absolute value of a tile ";
   let description = [{
     For each element (i, j): dst[i,j] = |src[i,j]|.
@@ -1724,6 +1727,11 @@ def PTO_AbsOp_DPS : PTO_DpsOp<"abs_dps", []> {
     }]>];
 
   let hasVerifier = 1;
+
+  let extraClassDeclaration = [{
+    ::mlir::pto::PIPE getPipe() { return ::mlir::pto::PIPE::PIPE_V; }
+    ::mlir::MutableOperandRange getDpsInitsMutable() { return getDstMutable(); }
+  }];
 }
 
 //===----------------------------------------------------------------------===//
@@ -1750,9 +1758,16 @@ def PTO_AddOp_DPS : PTO_DpsOp<"add_dps", []> {
     `outs` `(` $dst `:` qualified(type($dst) ) `)`
     (`init_out_buffer` `=` $init_out_buffer^)?
     attr-dict
-  }];
+  }]; 
 
   let hasVerifier = 1;
+
+  let extraClassDeclaration = [{
+    ::mlir::pto::PIPE getPipe() {
+      return ::mlir::pto::PIPE::PIPE_V;
+    }
+    ::mlir::MutableOperandRange getDpsInitsMutable() { return getDstMutable(); }
+  }];
 }
 //===----------------------------------------------------------------------===//
 // TADDC (sync, tilebuf-based tile ternary add)
@@ -3401,7 +3416,10 @@ def PTO_XOROp_DPS : PTO_DpsOp<"xor_dps", []> {
 // PTO_TOPs(Tilebuffer, DPS)
 //===----------------------------------------------------------------------===//
 
-def PTO_TAbsOp : PTO_TOp<"tabs", []> {
+def PTO_TAbsOp : PTO_TOp<"tabs", [
+  OpPipeInterface,
+  DeclareOpInterfaceMethods<MemoryEffectsOpInterface>
+]> {
   let summary = "Elementwise absolute value of a tile ";
   let description = [{
     For each element (i, j): dst[i,j] = |src[i,j]|.
@@ -3422,6 +3440,12 @@ def PTO_TAbsOp : PTO_TOp<"tabs", []> {
   }];
 
   let hasVerifier = 1;
+
+  let extraClassDeclaration = [{
+    ::mlir::pto::PIPE getPipe() {
+      return ::mlir::pto::PIPE::PIPE_V; // Vector pipe for elementwise ops
+    }
+  }];
 }
 
 def PTO_TAddOp : PTO_TOp<"tadd", [
