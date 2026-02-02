@@ -54,7 +54,7 @@ def build():
 
                 # transpose (optional result -> None)
                 # NOTE: TTransOp operands are (src, tmp, dst)
-                pto.TTransOp(None, tb_src, tb_tmp, tb_dst)
+                pto.TTransOp(tb_src, tb_tmp, tb_dst)
 
                 # output subview
                 sv1 = pto.SubviewOp(tile_view_32, tv1, [c0, c0], [c32, c32]).result
