@@ -17,8 +17,8 @@ jobs:
       fail-fast: false
       matrix:
         python: ["3.11"]
-        arch: [x86_64]
-        # Extend for more versions:
+        arch: [x86_64, aarch64]
+        # Extend for more Python versions:
         # python: ["3.9", "3.10", "3.11", "3.12"]
 
     container:
