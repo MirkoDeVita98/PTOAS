@@ -4126,8 +4126,8 @@ def PTO_TGatherOp : PTO_TOp<"tgather", []> {
   // --- operands (DPS): src0 + optional indices + outs(dst) ---
   let arguments = (ins
     PTODpsType:$src,
-    PTODpsType:$indices,
     PTODpsType:$dst,
+    Optional<PTODpsType>:$indices,
     OptionalAttr<PTO_MaskPatternAttr>:$maskPattern
   );
 
@@ -4135,18 +4135,7 @@ def PTO_TGatherOp : PTO_TOp<"tgather", []> {
   let results = (outs);
 
   let hasVerifier = 1;
-
-  let assemblyFormat = [{
-    `ins` `(` $src `:` qualified(type($src)) `,` $indices `:` qualified(type($indices)) `)`
-    `outs` `(` $dst `:` qualified(type($dst) ) `)`
-    (`maskPattern` `=` $maskPattern^)?
-    attr-dict
-  }];
-
-  let builders = [
-    OpBuilder<(ins "TypeRange":$res, "Value":$src, "Value":$dst), [{
-      build($_builder, $_state, res, src, dst,  /*indices=*/nullptr, /*maskPattern=*/nullptr); 
-    }]>];
+  let hasCustomAssemblyFormat = 1;
 }
 
 def PTO_TGatherbOp : PTO_TOp<"tgatherb", []> {

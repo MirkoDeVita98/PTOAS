@@ -351,8 +351,10 @@ def PTO_MaskPatternEnum : PTO_I32Enum<
   ]
 >;
 
-def PTO_MaskPatternAttr : EnumAttr<PTO_Dialect, PTO_MaskPatternEnum, "mask_pattern"> {
+def PTO_MaskPatternAttr : PTO_Attr<"MaskPattern", "mask_pattern"> {
   let summary = "mask pattern attribute";
+  let parameters = (ins EnumParameter<PTO_MaskPatternEnum>:$value);
+  let assemblyFormat = "`<` params `>`";
 }
 
 // ---------- enums ----------

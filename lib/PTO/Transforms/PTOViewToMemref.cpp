@@ -1453,24 +1453,48 @@ struct PTOViewToMemrefPass
         rewriter.setInsertionPoint(op);
 
         Value src = op.getSrc();
-        Value indices = op.getIndices();
         Value dst = op.getDst();
+        Value indices = op.getIndices();
+        auto maskPattern = op.getMaskPatternAttr();
 
         auto srcTy = dyn_cast<MemRefType>(src.getType());
-        auto indicesTy = dyn_cast<MemRefType>(indices.getType());
         auto dstTy = dyn_cast<MemRefType>(dst.getType());
-        if (!srcTy || !indicesTy || !dstTy) {
+
+        if (!srcTy || !dstTy) {
           op.emitError("ins/outs are not memref yet");
           signalPassFailure();
           return;
         }
 
-        rewriter.replaceOpWithNewOp<pto::GatherOp_DPS>(
-            op,
-            TypeRange{},
-            src,
-            dst,
-            indices);
+        if (indices) {
+          auto indicesTy = dyn_cast<MemRefType>(indices.getType());
+          if (!indicesTy) {
+            op.emitError("indices must be memref yet");
+            signalPassFailure();
+            return;
+          }
+
+          rewriter.replaceOpWithNewOp<pto::GatherOp_DPS>(
+              op,
+              TypeRange{},
+              src,
+              dst,
+              indices);
+        } else {
+          if (!maskPattern) {
+            op.emitError("expects maskPattern when indices is absent");
+            signalPassFailure();
+            return;
+          }
+
+          rewriter.replaceOpWithNewOp<pto::GatherOp_DPS>(
+              op,
+              TypeRange{},
+              src,
+              dst,
+              /*indices=*/Value(),
+              /*maskPattern=*/maskPattern);
+        }
       }
 
       SmallVector<mlir::pto::TGatherbOp, 8> gatherbops;

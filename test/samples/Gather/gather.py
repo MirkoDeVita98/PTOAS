@@ -1,4 +1,4 @@
-from mlir.ir import Context, Location, Module, InsertionPoint
+from mlir.ir import Attribute, Context, Location, Module, InsertionPoint
 from mlir.dialects import func, arith, pto
 from mlir.ir import F32Type, IndexType, IntegerType
 
@@ -56,7 +56,8 @@ def build():
                 # %5/%6/%7 = pto.alloc_tile : <32x32xf32>
                 tb0 = pto.AllocTileOp(tile_buf_f32).result
                 tb1 = pto.AllocTileOp(tile_buf_i32).result
-                tb2 = pto.AllocTileOp(tile_buf_f32).result
+                tb2 = pto.AllocTileOp(tile_buf_f32).result  # tmp
+                tb3 = pto.AllocTileOp(tile_buf_f32).result  # out
 
                 # pto.load_dps_tb ins(%sv) outs(%tb)
                 # 原生 builder 一般会把 optional operands/attrs 做成可选参数
@@ -64,15 +65,20 @@ def build():
                 pto.TLoadOp(None, sv0, tb0)  # result=None
                 pto.TLoadOp(None, sv1, tb1)  # result=None
 
-                # pto.addf_dps_tb ins(%tb0,%tb1) outs(%tb2)
-                # 你在 ODS 里提供了 builders (lhs,rhs,dst) 版本，所以这里直接这么构造
-                pto.TGatherOp(tb0, tb1, tb2)
+                # pto.tgather supports 2 mutually-exclusive forms:
+                # - index gather: ins(%src, %indices) outs(%dst)
+                # - mask gather : ins(%src, {maskPattern = #pto.mask_pattern<Pxxxx>}) outs(%dst)
+                #
+                # 这里串起来，确保两种形式都会在最终生成的 C++ 里出现。
+                pto.TGatherOp(tb0, tb2, indices=tb1)
+                mp = Attribute.parse("#pto.mask_pattern<P0101>", ctx)
+                pto.TGatherOp(tb2, tb3, maskPattern=mp)
 
                 # %8 = subview on output tensor_view
                 sv2 = pto.PartitionViewOp(tile_view_f32, tv2, offsets=[c0, c0], sizes=[c32, c32]).result
 
                 # pto.store_dps_tb ins(%tb2) outs(%sv2)
-                pto.TStoreOp(None, tb2, sv2)
+                pto.TStoreOp(None, tb3, sv2)
 
                 func.ReturnOp([])
             m.operation.verify()

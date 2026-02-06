@@ -374,7 +374,6 @@ void mlir::pto::TDivSOp::print(OpAsmPrinter &p) {
   p.printOptionalAttrDict((*this)->getAttrs());
 }
 
-//===----------------------------------------------------------------------===//
 // DivSOp_DPS custom asm to support both:
 //   pto.divs_dps ins(%src, %scalar : memref<...>, f32) outs(%dst : memref<...>)
 //   pto.divs_dps ins(%scalar, %src : f32, memref<...>) outs(%dst : memref<...>)
@@ -485,6 +484,113 @@ void mlir::pto::DivSOp_DPS::print(OpAsmPrinter &p) {
 
   p.printOptionalAttrDict((*this)->getAttrs());
 }
+
+//===----------------------------------------------------------------------===//
+// pto.tgather custom asm to support both:
+//   pto.tgather ins(%src, %indices : !pto.tile_buf<...>, !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
+//   pto.tgather ins(%src, {maskPattern = #pto.mask_pattern<P0101>} : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>)
+//
+// Legacy syntax support (for existing test artifacts):
+//   pto.tgather ins(%src : !pto.tile_buf<...>, %indices : !pto.tile_buf<...>) outs(%dst : !pto.tile_buf<...>) [maskPattern = ...]
+//===----------------------------------------------------------------------===//
+
+ParseResult mlir::pto::TGatherOp::parse(OpAsmParser &parser, OperationState &result) {
+  OpAsmParser::UnresolvedOperand src, dst, indices;
+  Type srcTy, dstTy, indicesTy;
+  bool hasIndices = false;
+
+  // ins(...)
+  if (parser.parseKeyword("ins") || parser.parseLParen() || parser.parseOperand(src))
+    return failure();
+
+  // New-style: ins(%src, <indices-or-{maskPattern=...}> : ...)
+  if (succeeded(parser.parseOptionalComma())) {
+    // Mask form: ins(%src, {maskPattern = #pto.mask_pattern<Pxxxx>} : srcTy)
+    if (succeeded(parser.parseOptionalLBrace())) {
+      if (parser.parseKeyword("maskPattern") || parser.parseEqual())
+        return failure();
+
+      Attribute rawMaskAttr;
+      if (parser.parseAttribute(rawMaskAttr) || parser.parseRBrace())
+        return failure();
+
+      auto mp = llvm::dyn_cast<mlir::pto::MaskPatternAttr>(rawMaskAttr);
+      if (!mp)
+        return parser.emitError(parser.getCurrentLocation(),
+                                "expected #pto.mask_pattern<Pxxxx> for maskPattern");
+
+      result.addAttribute("maskPattern", mp);
+
+      if (parser.parseColonType(srcTy) || parser.parseRParen())
+        return failure();
+    } else {
+      // Index form: ins(%src, %indices : srcTy, indicesTy)
+      if (parser.parseOperand(indices) || parser.parseColonType(srcTy) ||
+          parser.parseComma() || parser.parseType(indicesTy) || parser.parseRParen())
+        return failure();
+      hasIndices = true;
+    }
+  } else if (succeeded(parser.parseOptionalColon())) {
+    // Legacy typed-operand form:
+    //   ins(%src : srcTy, %indices : indicesTy)
+    if (parser.parseType(srcTy) || parser.parseComma() ||
+        parser.parseOperand(indices) || parser.parseColonType(indicesTy) ||
+        parser.parseRParen())
+      return failure();
+    hasIndices = true;
+  } else {
+    return parser.emitError(parser.getCurrentLocation(),
+                            "expected ',' or ':' after src operand in ins(...)");
+  }
+
+  // outs(...)
+  if (parser.parseKeyword("outs") || parser.parseLParen() ||
+      parser.parseOperand(dst) || parser.parseColonType(dstTy) || parser.parseRParen())
+    return failure();
+
+  // Optional legacy: maskPattern = #pto.mask_pattern<Pxxxx>
+  if (succeeded(parser.parseOptionalKeyword("maskPattern"))) {
+    if (parser.parseEqual())
+      return failure();
+    Attribute rawMaskAttr;
+    if (parser.parseAttribute(rawMaskAttr))
+      return failure();
+    auto mp = llvm::dyn_cast<mlir::pto::MaskPatternAttr>(rawMaskAttr);
+    if (!mp)
+      return parser.emitError(parser.getCurrentLocation(),
+                              "expected #pto.mask_pattern<Pxxxx> for maskPattern");
+    result.addAttribute("maskPattern", mp);
+  }
+
+  // attr-dict
+  if (parser.parseOptionalAttrDict(result.attributes))
+    return failure();
+
+  // Resolve operands in op order: (src, dst, optional indices).
+  if (parser.resolveOperand(src, srcTy, result.operands) ||
+      parser.resolveOperand(dst, dstTy, result.operands))
+    return failure();
+  if (hasIndices && parser.resolveOperand(indices, indicesTy, result.operands))
+    return failure();
+
+  return success();
+}
+
+void mlir::pto::TGatherOp::print(OpAsmPrinter &p) {
+  auto indices = getIndices();
+  auto mp = getMaskPatternAttr();
+
+  p << " ins(" << getSrc() << ", ";
+  if (indices) {
+    p << indices << " : " << getSrc().getType() << ", " << indices.getType();
+  } else {
+    p << "{maskPattern = " << mp << "} : " << getSrc().getType();
+  }
+  p << ") outs(" << getDst() << " : " << getDst().getType() << ")";
+
+  p.printOptionalAttrDict((*this)->getAttrs(), /*elidedAttrs=*/{"maskPattern"});
+}
+
 ParseResult mlir::pto::MakeTensorViewOp::parse(OpAsmParser &parser,
                                                OperationState &result) {
   OpAsmParser::UnresolvedOperand ptr;
