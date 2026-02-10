@@ -87,7 +87,7 @@ process_one_dir() {
   ptoas="$(resolve_ptoas_bin)"
   python="$(resolve_python_bin)"
   local -a ptoas_flags=()
-  if [[ -n "${PTOAS_FLAGS}" ]]; then
+  if [[ -n "${PTOAS_FLAGS:-}" ]]; then
     # shellcheck disable=SC2206
     ptoas_flags=(${PTOAS_FLAGS})
   fi
@@ -120,7 +120,7 @@ process_one_dir() {
     fi
 
     # Write output via -o to avoid mixing debug prints with generated C++.
-    if ! "$ptoas" "${ptoas_flags[@]}" "$mlir" -o "$cpp" >/dev/null 2>&1; then
+    if ! "$ptoas" ${ptoas_flags[@]+"${ptoas_flags[@]}"} "$mlir" -o "$cpp" >/dev/null 2>&1; then
       echo -e "${A}(${base}.py)\tFAIL\tptoas failed: $(basename "$mlir")"
       overall=1
       continue
@@ -147,7 +147,7 @@ process_one_dir() {
       base="$(basename "$f" .pto)"
       cpp="${out_subdir}/${base}.cpp"
 
-      if ! "$ptoas" "${ptoas_flags[@]}" "$f" -o "$cpp" >/dev/null 2>&1; then
+      if ! "$ptoas" ${ptoas_flags[@]+"${ptoas_flags[@]}"} "$f" -o "$cpp" >/dev/null 2>&1; then
         echo -e "${A}(${base}.pto)\tFAIL\tptoas failed: $(basename "$f")"
         overall=1
         continue

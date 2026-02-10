@@ -313,7 +313,6 @@ int main(int argc, char **argv) {
   outputFile.os() << cppOutput;
 
   outputFile.keep(); // Success, keep the file
-  llvm::outs() << "PTO Driver Success!!!\n";
 
   return 0;
 }
