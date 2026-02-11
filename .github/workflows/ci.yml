@@ -30,7 +30,7 @@ on:
       skip_cases:
         description: "Comma/space separated testcase names to skip (e.g. scatter,mrgsort)"
         type: string
-        default: ""
+        default: "mix_kernel,vadd_validshape,vadd_validshape_dynamic"
       run_only_cases:
         description: "Comma/space separated testcase names to run (empty = run all)"
         type: string
@@ -42,7 +42,9 @@ on:
       pto_isa_commit:
         description: "pto-isa ref (commit/tag/branch; empty = default branch)"
         type: string
-        default: ""
+        # NOTE: Remote NPU validation depends on upstream pto-isa. Pin a known-good
+        # commit by default to keep scheduled runs deterministic.
+        default: 082b94a3d2eaa17d63d1e5b0d74714a00594ace0
       remote_host:
         description: "SSH host/IP for the NPU machine"
         type: string
@@ -230,9 +232,9 @@ jobs:
       # Temporary CI gate: skip cases that still error/flap on the remote NPU.
       # Update this list as we fix the underlying issues.
       DEFAULT_SKIP_CASES: >-
-        trans,extract,movfp,vadd_validshape_dynamic,vadd_validshape,mrgsort_format2,
-        gemvbias,gemvacc,gemv,ci,mix_kernel,colmax,colmin,rowmax,rowsum,
-        vadd_pto_pingpong,cmp,mins,div,prelu,gather_legacy,xor
+        mix_kernel,vadd_validshape,vadd_validshape_dynamic
+      # Keep nightly runs deterministic by pinning pto-isa unless overridden.
+      DEFAULT_PTO_ISA_COMMIT: 082b94a3d2eaa17d63d1e5b0d74714a00594ace0
     steps:
       - name: Resolve validation parameters
         shell: bash
@@ -250,12 +252,15 @@ jobs:
           REMOTE_PORT: ${{ github.event.inputs.remote_port || '22' }}
         run: |
           set -euo pipefail
-          # Only apply the default skip list in CI events (push/main, PR gate).
-          # For manual workflow_dispatch runs, keep the user's input unchanged
-          # (empty means "run all").
+          # For scheduled runs, default to DEFAULT_SKIP_CASES (known-bad/flaky).
+          # For workflow_dispatch runs, honor the user's input (the UI default
+          # is pre-filled but can be edited to run everything).
           if [[ "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ]]; then
             if [[ -z "${SKIP_CASES}" ]]; then
               SKIP_CASES="${DEFAULT_SKIP_CASES}"
+            fi
+            if [[ -z "${PTO_ISA_COMMIT}" ]]; then
+              PTO_ISA_COMMIT="${DEFAULT_PTO_ISA_COMMIT}"
             fi
           fi
           echo "STAGE=${STAGE}" >> "${GITHUB_ENV}"

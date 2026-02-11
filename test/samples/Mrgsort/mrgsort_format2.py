@@ -27,17 +27,21 @@ def build():
             vec_4_i16 = VectorType.get([4], i16)
 
             tv2_f32 = pto.TensorViewType.get(2, f32, ctx)
-            # Each list holds 128 packed structures (value+index), i.e. 256 f32 words.
-            # Represent it as 8x32 to keep strides simple.
-            part_view_8x32 = pto.PartitionTensorViewType.get([8, 32], f32, ctx)
-            part_view_32x32 = pto.PartitionTensorViewType.get([32, 32], f32, ctx)
+            # Each list holds packed (value, index) structures. In pto-isa each
+            # structure is 8 bytes (2 x f32 when using float tiles). Keep the
+            # testcase small enough to satisfy device constraints across SoCs.
+            #
+            # 4 lists * 64 structures/list = 256 structures output.
+            # 1 structure = 2 floats => 128 floats/list, 512 floats output.
+            part_view_1x128 = pto.PartitionTensorViewType.get([1, 128], f32, ctx)
+            part_view_1x512 = pto.PartitionTensorViewType.get([1, 512], f32, ctx)
             vec = pto.AddressSpaceAttr.get(pto.AddressSpace.VEC, ctx)
             bl = pto.BLayoutAttr.get(pto.BLayout.RowMajor, ctx)
             sl = pto.SLayoutAttr.get(pto.SLayout.NoneBox, ctx)
             pd = pto.PadValueAttr.get(pto.PadValue.Null, ctx)
             cfg = pto.TileBufConfigAttr.get(bl, sl, 512, pd, ctx)
-            tile_buf_1x256 = pto.TileBufType.get([1, 256], f32, vec, [1, 256], cfg, ctx)
-            tile_buf_1x1024 = pto.TileBufType.get([1, 1024], f32, vec, [1, 1024], cfg, ctx)
+            tile_buf_1x128 = pto.TileBufType.get([1, 128], f32, vec, [1, 128], cfg, ctx)
+            tile_buf_1x512 = pto.TileBufType.get([1, 512], f32, vec, [1, 512], cfg, ctx)
 
             # Kernel: (in0_ptr, in1_ptr, in2_ptr, in3_ptr, out_ptr, executed_list) -> ()
             fn_ty = func.FunctionType.get(
@@ -50,32 +54,31 @@ def build():
             with InsertionPoint(entry):
                 c0 = arith.ConstantOp(IndexType.get(ctx), 0).result
                 c1 = arith.ConstantOp(IndexType.get(ctx), 1).result
-                c8 = arith.ConstantOp(IndexType.get(ctx), 8).result
-                c32 = arith.ConstantOp(IndexType.get(ctx), 32).result
-                c256 = arith.ConstantOp(IndexType.get(ctx), 256).result
+                c128 = arith.ConstantOp(IndexType.get(ctx), 128).result
+                c512 = arith.ConstantOp(IndexType.get(ctx), 512).result
 
                 arg0, arg1, arg2, arg3, arg_out, excuted = entry.arguments
 
-                # Inputs: 8x32 (256 f32) per list.
-                tv0 = pto.MakeTensorViewOp(tv2_f32, arg0, [c8, c32], [c32, c1]).result
-                tv1 = pto.MakeTensorViewOp(tv2_f32, arg1, [c8, c32], [c32, c1]).result
-                tv2 = pto.MakeTensorViewOp(tv2_f32, arg2, [c8, c32], [c32, c1]).result
-                tv3 = pto.MakeTensorViewOp(tv2_f32, arg3, [c8, c32], [c32, c1]).result
-                # Output: 32x32 (1024 f32) for 512 packed structures.
-                tv_out = pto.MakeTensorViewOp(tv2_f32, arg_out, [c32, c32], [c256, c1]).result
+                # Inputs: 1x128 (128 f32) per list.
+                tv0 = pto.MakeTensorViewOp(tv2_f32, arg0, [c1, c128], [c128, c1]).result
+                tv1 = pto.MakeTensorViewOp(tv2_f32, arg1, [c1, c128], [c128, c1]).result
+                tv2 = pto.MakeTensorViewOp(tv2_f32, arg2, [c1, c128], [c128, c1]).result
+                tv3 = pto.MakeTensorViewOp(tv2_f32, arg3, [c1, c128], [c128, c1]).result
+                # Output: 1x512 (512 f32) for 256 packed structures.
+                tv_out = pto.MakeTensorViewOp(tv2_f32, arg_out, [c1, c512], [c512, c1]).result
 
-                sv0 = pto.PartitionViewOp(part_view_8x32, tv0, offsets=[c0, c0], sizes=[c8, c32]).result
-                sv1 = pto.PartitionViewOp(part_view_8x32, tv1, offsets=[c0, c0], sizes=[c8, c32]).result
-                sv2 = pto.PartitionViewOp(part_view_8x32, tv2, offsets=[c0, c0], sizes=[c8, c32]).result
-                sv3 = pto.PartitionViewOp(part_view_8x32, tv3, offsets=[c0, c0], sizes=[c8, c32]).result
+                sv0 = pto.PartitionViewOp(part_view_1x128, tv0, offsets=[c0, c0], sizes=[c1, c128]).result
+                sv1 = pto.PartitionViewOp(part_view_1x128, tv1, offsets=[c0, c0], sizes=[c1, c128]).result
+                sv2 = pto.PartitionViewOp(part_view_1x128, tv2, offsets=[c0, c0], sizes=[c1, c128]).result
+                sv3 = pto.PartitionViewOp(part_view_1x128, tv3, offsets=[c0, c0], sizes=[c1, c128]).result
 
                 # Format2: 4 src tiles + 2 dst tiles (dst + tmp) + 1 executed list.
-                tb_s0 = pto.AllocTileOp(tile_buf_1x256).result
-                tb_s1 = pto.AllocTileOp(tile_buf_1x256).result
-                tb_s2 = pto.AllocTileOp(tile_buf_1x256).result
-                tb_s3 = pto.AllocTileOp(tile_buf_1x256).result
-                tb_dst = pto.AllocTileOp(tile_buf_1x1024).result
-                tb_tmp = pto.AllocTileOp(tile_buf_1x1024).result
+                tb_s0 = pto.AllocTileOp(tile_buf_1x128).result
+                tb_s1 = pto.AllocTileOp(tile_buf_1x128).result
+                tb_s2 = pto.AllocTileOp(tile_buf_1x128).result
+                tb_s3 = pto.AllocTileOp(tile_buf_1x128).result
+                tb_dst = pto.AllocTileOp(tile_buf_1x512).result
+                tb_tmp = pto.AllocTileOp(tile_buf_1x512).result
 
                 pto.TLoadOp(None, sv0, tb_s0)
                 pto.TLoadOp(None, sv1, tb_s1)
@@ -90,7 +93,7 @@ def build():
                     exhausted=False,
                 )
 
-                sv_out = pto.PartitionViewOp(part_view_32x32, tv_out, offsets=[c0, c0], sizes=[c32, c32]).result
+                sv_out = pto.PartitionViewOp(part_view_1x512, tv_out, offsets=[c0, c0], sizes=[c1, c512]).result
                 pto.TStoreOp(None, tb_dst, sv_out)
 
                 func.ReturnOp([])

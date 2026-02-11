@@ -43,6 +43,64 @@ def compare_bin(golden_path, output_path, dtype, eps):
     return True
 
 
+def compare_packed_pred_mask(golden_path, output_path, rows, cols):
+    """
+    Compare outputs of pto.tcmp / pto.tcmps.
+
+    These ops produce a *packed predicate mask* and do not define every byte in
+    the logical u8 tile buffer. In practice, only the first N bytes of each row
+    are meaningful (packed as 64-bit chunks). Ignore the rest to avoid flaky
+    compares caused by undefined bytes.
+    """
+    if not os.path.exists(output_path):
+        print(f"[ERROR] Output missing: {output_path}")
+        return False
+    if not os.path.exists(golden_path):
+        print(f"[ERROR] Golden missing: {golden_path}")
+        return False
+    try:
+        rows = int(rows)
+        cols = int(cols)
+    except Exception:
+        print(f"[ERROR] Invalid rows/cols for packed mask compare: rows={rows} cols={cols}")
+        return False
+    if rows <= 0 or cols <= 0:
+        print(f"[ERROR] Invalid rows/cols for packed mask compare: rows={rows} cols={cols}")
+        return False
+
+    golden = np.fromfile(golden_path, dtype=np.uint8)
+    output = np.fromfile(output_path, dtype=np.uint8)
+
+    need = rows * cols
+    if golden.size < need or output.size < need:
+        print(
+            f"[ERROR] Packed mask buffer too small: need={need} bytes, "
+            f"golden={golden.size}, out={output.size}"
+        )
+        return False
+
+    golden = golden[:need].reshape(rows, cols)
+    output = output[:need].reshape(rows, cols)
+
+    # Packed mask layout: 1 predicate bit per element, packed into 64-bit words
+    # per row (so 8 bytes per 64 columns). For cols <= 64 we still use one word.
+    row_bytes = ((cols + 63) // 64) * 8
+    row_bytes = min(row_bytes, cols)
+
+    golden_sel = golden[:, :row_bytes].reshape(-1)
+    output_sel = output[:, :row_bytes].reshape(-1)
+
+    if not np.array_equal(golden_sel, output_sel):
+        diff = np.nonzero(golden_sel != output_sel)[0]
+        idx = int(diff[0]) if diff.size else 0
+        print(
+            f"[ERROR] Mismatch (packed mask): {golden_path} vs {output_path}, first diff at idx={idx} "
+            f"(golden={int(golden_sel[idx])}, out={int(output_sel[idx])}, rows={rows}, cols={cols}, row_bytes={row_bytes})"
+        )
+        return False
+    return True
+
+
 def main():
     strict = os.getenv("COMPARE_STRICT", "1") != "0"
 @COMPARES@

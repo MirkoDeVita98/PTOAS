@@ -17,6 +17,8 @@ def build(M=32, N=32, K=32, TM=32, TN=32, TK=32):
             tv2_f32 = pto.TensorViewType.get(2, f32, ctx)
             tile_view_a = pto.PartitionTensorViewType.get([TM, TK], f32, ctx)
             tile_view_b = pto.PartitionTensorViewType.get([TK, TN], f32, ctx)
+            tile_view_out = pto.PartitionTensorViewType.get([TM, TN], f32, ctx)
+            tile_view_reduce = pto.PartitionTensorViewType.get([TM, 1], f32, ctx)
 
             vec = pto.AddressSpaceAttr.get(pto.AddressSpace.VEC, ctx)
             mat = pto.AddressSpaceAttr.get(pto.AddressSpace.MAT, ctx)
@@ -51,9 +53,6 @@ def build(M=32, N=32, K=32, TM=32, TN=32, TK=32):
                 [TK, TN], f32, right, [TK, TN], cfg_right, ctx)
             acc_tile = pto.TileBufType.get([TM, TN], f32, acc, [TM, TN], cfg_acc, ctx)
 
-            PIPE_FIX = Attribute.parse("#pto.pipe<PIPE_FIX>", ctx)
-            PIPE_V = Attribute.parse("#pto.pipe<PIPE_V>", ctx)
-
             fn_ty = func.FunctionType.get([ptr_f32, ptr_f32, ptr_f32], [])
             with InsertionPoint(m.body):
                 fn = func.FuncOp("vector_cube_mixed_kernel", fn_ty)
@@ -85,12 +84,16 @@ def build(M=32, N=32, K=32, TM=32, TN=32, TK=32):
                     tv2_f32, arg1, [ctk, ctn], [cn, c1]).result
                 tv2 = pto.MakeTensorViewOp(
                     tv2_f32, arg2, [ctm, ctn], [cn, c1]).result
+                tv_reduce = pto.MakeTensorViewOp(
+                    tv2_f32, arg2, [ctm, c1], [c1, c1]).result
 
                 # Updated subview with constants instead of literals
                 sv0 = pto.PartitionViewOp(tile_view_a, tv0, offsets=[
                                     c0, offset_0], sizes=[ctm, ctk]).result
                 sv1 = pto.PartitionViewOp(tile_view_b, tv1, offsets=[
                                     c0, offset_1], sizes=[ctk, ctn]).result
+                sv_out = pto.PartitionViewOp(tile_view_out, tv2, offsets=[c0, c0], sizes=[ctm, ctn]).result
+                sv_reduce = pto.PartitionViewOp(tile_view_reduce, tv_reduce, offsets=[c0, c0], sizes=[ctm, c1]).result
 
                 # allocate cbuf
                 aMatTile = pto.AllocTileOp(mat_tile_a).result
@@ -102,7 +105,7 @@ def build(M=32, N=32, K=32, TM=32, TN=32, TK=32):
                 # allocate UB
                 ubTile = pto.AllocTileOp(ub_tile).result
                 ubTmpTile = pto.AllocTileOp(ub_tile).result
-                ubReduceTile = pto.AllocTileOp(ub_reduce_tile)
+                ubReduceTile = pto.AllocTileOp(ub_reduce_tile).result
 
                 # load from gm to cbuf
                 pto.TLoadOp(None, sv0, aMatTile)
@@ -114,16 +117,14 @@ def build(M=32, N=32, K=32, TM=32, TN=32, TK=32):
 
                 pto.TMatmulOp(None, aTile, bTile, cTile)
 
-                # move result from l0c to
-                pto.TMovOp(None, cTile, ubTile)
-
-                pto.SyncSetOp(PIPE_FIX, 0)
-                pto.SyncSetOp(PIPE_FIX, 16)
-
-                pto.SyncWaitOp(PIPE_V, 0)
+                # NOTE: pto-isa does not support direct ACC->VEC TMOV on a2a3.
+                # Store ACC to GM and reload into UB for vector reductions.
+                pto.TStoreOp(None, cTile, sv_out)
+                pto.TLoadOp(None, sv_out, ubTile)
 
                 # pto.trowmax ins(%src, %tmp) outs(%dst)
                 pto.TRowMaxOp(ubTile, ubTmpTile, ubReduceTile)
+                pto.TStoreOp(None, ubReduceTile, sv_reduce)
 
                 func.ReturnOp([])
 

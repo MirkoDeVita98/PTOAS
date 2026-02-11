@@ -6710,12 +6710,26 @@ PIPE CopyOp::getPipe() {
 // =============================================================================
  
 PIPE MovDpsOp::getPipe() {
-  // 简单判断：如果 dst 是 L0 (L0A/L0B)，则是 MTE1
-  AddressSpace dstSpace = getAddressSpace(getDst());
-  if (dstSpace == AddressSpace::LEFT || dstSpace == AddressSpace::RIGHT ||
-      dstSpace == AddressSpace::BIAS) {
+  // TMOV spans multiple hardware pipelines depending on the source/dest
+  // domains. Keep the DPS version consistent with the tile-world TMOV:
+  //   - MAT -> L0 (LEFT/RIGHT/BIAS/SCALING) and ACC -> MAT are MTE1 moves.
+  //   - UB/VEC intra-domain copies fall back to vector pipe.
+  //
+  // NOTE: Sync insertion relies on this classification to build correct event
+  // dependencies. Mis-classification here can lead to illegal instruction
+  // failures on NPU (e.g. MAT->SCALING being treated as PIPE_V).
+  const AddressSpace srcSpace = getAddressSpace(getSrc());
+  const AddressSpace dstSpace = getAddressSpace(getDst());
+
+  if (srcSpace == AddressSpace::VEC && dstSpace == AddressSpace::VEC)
+    return PIPE::PIPE_V;
+
+  if ((srcSpace == AddressSpace::MAT &&
+       (dstSpace == AddressSpace::LEFT || dstSpace == AddressSpace::RIGHT ||
+        dstSpace == AddressSpace::BIAS || dstSpace == AddressSpace::SCALING)) ||
+      (srcSpace == AddressSpace::ACC && dstSpace == AddressSpace::MAT))
     return PIPE::PIPE_MTE1;
-  }
+
   return PIPE::PIPE_V;
 }
 

@@ -261,6 +261,64 @@ def _replace_includes(text: str) -> str:
     return INCLUDE_REPLACEMENT + "\n" + text
 
 
+def _inject_packed_pred_mask_preload(
+    kernel_text: str,
+    *,
+    dst_tile: str,
+    output_ptr: str,
+    output_cpp_type: str,
+    rows: int,
+    cols: int,
+    logical_elem_count: int,
+) -> str:
+    """
+    pto.tcmp / pto.tcmps write a packed predicate mask and may leave parts of the
+    destination tile undefined (UB garbage). Our validation harness compares
+    two NPU runs for determinism; undefined bytes make the compare flaky.
+
+    Inject a TLOAD(dst, GM_output) before the first PIPE_MTE2->PIPE_V barrier so
+    the whole dst tile starts from deterministic contents (the output buffer is
+    initialized from .bin files on the host).
+    """
+    if "PTOAS_PACKED_MASK_PRELOAD" in kernel_text:
+        return kernel_text
+
+    if not dst_tile or not output_ptr:
+        return kernel_text
+
+    # Find a reasonable insertion point: before the first MTE2->V set_flag.
+    m = re.search(r"^(\s*)set_flag\s*\(\s*PIPE_MTE2\s*,\s*PIPE_V\s*,", kernel_text, re.M)
+    if m:
+        indent = m.group(1)
+        insert_at = m.start()
+    else:
+        # Fallback: insert right before the first TCMP/TCMPS call.
+        m2 = re.search(r"^(\s*)TCMPS?\s*\(", kernel_text, re.M)
+        if not m2:
+            return kernel_text
+        indent = m2.group(1)
+        insert_at = m2.start()
+
+    # We don't rely on the kernel's existing GlobalTensor aliases here; keep
+    # names unique to avoid collisions.
+    preload_lines = [
+        f"{indent}// PTOAS_PACKED_MASK_PRELOAD: init packed predicate dst from GM",
+        f"{indent}{{",
+        f"{indent}  using __ptoas_mask_gt_shape = pto::Shape<1, 1, 1, {rows}, {cols}>;",
+        f"{indent}  using __ptoas_mask_gt_stride = pto::Stride<{logical_elem_count}, {logical_elem_count}, {logical_elem_count}, {cols}, 1>;",
+        f"{indent}  constexpr pto::Layout __ptoas_mask_gt_layout = pto::Layout::ND;",
+        f"{indent}  __ptoas_mask_gt_shape __ptoas_mask_shape = __ptoas_mask_gt_shape();",
+        f"{indent}  __ptoas_mask_gt_stride __ptoas_mask_stride = __ptoas_mask_gt_stride();",
+        f"{indent}  using __ptoas_mask_gt = GlobalTensor<{output_cpp_type}, __ptoas_mask_gt_shape, __ptoas_mask_gt_stride, __ptoas_mask_gt_layout>;",
+        f"{indent}  __ptoas_mask_gt __ptoas_mask_src = __ptoas_mask_gt((__gm__ {output_cpp_type}*){output_ptr}, __ptoas_mask_shape, __ptoas_mask_stride);",
+        f"{indent}  TLOAD({dst_tile}, __ptoas_mask_src);",
+        f"{indent}}}",
+        "",
+    ]
+    block = "\n".join(preload_lines)
+    return kernel_text[:insert_at] + block + kernel_text[insert_at:]
+
+
 def _infer_aicore_arch(kernel_text: str, soc_version: str) -> str:
     # Heuristic: kernels that touch cube/L0/L1 tile types or cbuf memories need
     # the "cube" arch; pure vector kernels can use the vector arch.
@@ -625,6 +683,10 @@ def generate_testcase(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     raw_kernel = input_cpp.read_text(encoding="utf-8")
+    raw_kernel_for_analysis = raw_kernel
+    # pto.tcmp / pto.tcmps produce packed predicate masks and leave parts of the
+    # logical u8 tile undefined. This can make byte-wise compares flaky.
+    has_packed_pred_mask = re.search(r"\bTCMPS?\s*\(", raw_kernel_for_analysis) is not None
     has_dav_cube = "__DAV_CUBE__" in raw_kernel
     has_dav_vec = "__DAV_VEC__" in raw_kernel
 
@@ -650,14 +712,11 @@ def generate_testcase(
     if has_dav_vec:
         dav_defines += " -D__DAV_VEC__"
 
-    kernel_out = output_dir / f"{testcase}_kernel.cpp"
-    kernel_out.write_text(_replace_includes(raw_kernel), encoding="utf-8")
-
-    rows, cols = _parse_shape(raw_kernel)
+    rows, cols = _parse_shape(raw_kernel_for_analysis)
     logical_elem_count = rows * cols
-    kernel_name = _parse_kernel_name(raw_kernel)
-    raw_params = _parse_kernel_params(raw_kernel)
-    mrgsort_block_len = _infer_mrgsort_block_len(raw_kernel) if "TMRGSORT" in raw_kernel else None
+    kernel_name = _parse_kernel_name(raw_kernel_for_analysis)
+    raw_params = _parse_kernel_params(raw_kernel_for_analysis)
+    mrgsort_block_len = _infer_mrgsort_block_len(raw_kernel_for_analysis) if "TMRGSORT" in raw_kernel_for_analysis else None
 
     pointer_param_names = [_extract_cpp_name(p) for p in raw_params if _is_gm_pointer_param(p)]
     inferred_void_ptr_types = {}
@@ -667,11 +726,11 @@ def generate_testcase(
         name = _extract_cpp_name(raw)
         cpp_type = _extract_cpp_type(raw)
         if cpp_type == "void":
-            inferred = _infer_void_gm_pointee_type(raw_kernel, name)
+            inferred = _infer_void_gm_pointee_type(raw_kernel_for_analysis, name)
             if inferred:
                 inferred_void_ptr_types[name] = inferred
 
-    output_ptr = _detect_output_pointer_param(raw_kernel, pointer_param_names)
+    output_ptr = _detect_output_pointer_param(raw_kernel_for_analysis, pointer_param_names)
     if output_ptr is None and pointer_param_names:
         output_ptr = pointer_param_names[0] if len(pointer_param_names) == 1 else pointer_param_names[-1]
 
@@ -713,7 +772,7 @@ def generate_testcase(
     output_ptrs = [p for p in params if p["kind"] == "ptr" and p["role"] == "output"]
 
     ptr_elem_counts = {p["name"]: logical_elem_count for p in params if p["kind"] == "ptr"}
-    inferred_counts = _infer_gm_pointer_elem_counts(raw_kernel, pointer_param_names)
+    inferred_counts = _infer_gm_pointer_elem_counts(raw_kernel_for_analysis, pointer_param_names)
     for name, cnt in inferred_counts.items():
         ptr_elem_counts[name] = max(ptr_elem_counts.get(name, logical_elem_count), cnt)
 
@@ -751,7 +810,11 @@ def generate_testcase(
         # Some PTO-ISA APIs use small POD structs as scalar parameters.
         # Example: pto::MrgSortExecutedNumList (used by TMRGSORT multi-list variants).
         if t.endswith("MrgSortExecutedNumList"):
-            param_decls_lines.append(f"    {t} {p['name']}{{}};")
+            # A zero-initialized executed list can lead to illegal configurations
+            # and runtime exceptions for TMRGSORT format2 on NPU. Default to "all
+            # lists full" for our generated samples (each list holds 128 packed
+            # structures in the standard 1x256 f32 representation).
+            param_decls_lines.append(f"    {t} {p['name']}{{128, 128, 128, 128}};")
             continue
         if t == "bool":
             value = "true"
@@ -848,8 +911,6 @@ def generate_testcase(
     elif any(m in raw_kernel for m in ("TGATHER", "TGATHERB")):
         index_mod = max(elem_count, 1)
     mrgsort_packed = "TMRGSORT" in raw_kernel
-    if mrgsort_packed and not mrgsort_block_len:
-        mrgsort_block_len = 64
     for p in init_ptrs:
         np_dtype = _np_dtype_for_cpp(p["cpp_type"])
         name = p["name"]
@@ -877,30 +938,43 @@ def generate_testcase(
                 input_generate.append(f"    {name}__value_dtype = np.float16")
 
             input_generate.append(f"    {name}__struct_count = {size} // {name}__words_per_struct")
-            input_generate.append(f"    {name}__block_len = {mrgsort_block_len}")
-            input_generate.append(f"    {name}__structs_per_block = {name}__block_len // {name}__words_per_struct")
+            # Two modes:
+            #   - Single-list format (TMRGSORT(dst, src, blockLen)): input is arranged in
+            #     4 blocks and each block is sorted independently.
+            #   - Multi-list format (TMRGSORT(dst, executed, tmp, src0..)): each input list
+            #     is fully sorted.
+            mrgsort_single = mrgsort_block_len is not None
+            if mrgsort_single:
+                input_generate.append(f"    {name}__block_len = {mrgsort_block_len}")
+                input_generate.append(f"    {name}__structs_per_block = {name}__block_len // {name}__words_per_struct")
             input_generate.append(
                 f"    {name}__values = np.random.uniform(low=0, high=1, size=({name}__struct_count,)).astype({name}__value_dtype)"
             )
             input_generate.append(f"    {name}__idx = np.arange({name}__struct_count, dtype=np.uint32)")
-            input_generate.append(f"    if {name}__structs_per_block > 0 and {name}__struct_count > 0:")
-            input_generate.append(f"        pad = (-{name}__struct_count) % {name}__structs_per_block")
-            input_generate.append(f"        if pad:")
-            input_generate.append(
-                f"            {name}__values = np.concatenate(({name}__values, np.zeros(pad, dtype={name}__values.dtype)))"
-            )
-            input_generate.append(
-                f"            {name}__idx = np.concatenate(({name}__idx, np.zeros(pad, dtype={name}__idx.dtype)))"
-            )
-            input_generate.append(f"        v = {name}__values.reshape(-1, {name}__structs_per_block)")
-            input_generate.append(f"        i = {name}__idx.reshape(-1, {name}__structs_per_block)")
-            input_generate.append(f"        order = np.argsort(-v, kind='stable', axis=1)")
-            input_generate.append(
-                f"        {name}__values = np.take_along_axis(v, order, axis=1).reshape(-1)[:{name}__struct_count]"
-            )
-            input_generate.append(
-                f"        {name}__idx = np.take_along_axis(i, order, axis=1).reshape(-1)[:{name}__struct_count]"
-            )
+            if mrgsort_single:
+                input_generate.append(f"    if {name}__structs_per_block > 0 and {name}__struct_count > 0:")
+                input_generate.append(f"        pad = (-{name}__struct_count) % {name}__structs_per_block")
+                input_generate.append(f"        if pad:")
+                input_generate.append(
+                    f"            {name}__values = np.concatenate(({name}__values, np.zeros(pad, dtype={name}__values.dtype)))"
+                )
+                input_generate.append(
+                    f"            {name}__idx = np.concatenate(({name}__idx, np.zeros(pad, dtype={name}__idx.dtype)))"
+                )
+                input_generate.append(f"        v = {name}__values.reshape(-1, {name}__structs_per_block)")
+                input_generate.append(f"        i = {name}__idx.reshape(-1, {name}__structs_per_block)")
+                input_generate.append(f"        order = np.argsort(-v, kind='stable', axis=1)")
+                input_generate.append(
+                    f"        {name}__values = np.take_along_axis(v, order, axis=1).reshape(-1)[:{name}__struct_count]"
+                )
+                input_generate.append(
+                    f"        {name}__idx = np.take_along_axis(i, order, axis=1).reshape(-1)[:{name}__struct_count]"
+                )
+            else:
+                input_generate.append(f"    if {name}__struct_count > 0:")
+                input_generate.append(f"        order = np.argsort(-{name}__values, kind='stable')")
+                input_generate.append(f"        {name}__values = {name}__values[order]")
+                input_generate.append(f"        {name}__idx = {name}__idx[order]")
             input_generate.append(f"    {name}__packed = np.empty(({name}__struct_count,), dtype={name}__struct_dtype)")
             input_generate.append(f"    {name}__packed['v'] = {name}__values")
             if np_dtype == "np.float16":
@@ -921,6 +995,28 @@ def generate_testcase(
 
     golden_py = golden_template.replace("@INPUT_GENERATE@", "\n".join(input_generate))
     (output_dir / "golden.py").write_text(golden_py, encoding="utf-8")
+
+    # Emit the kernel source, optionally injecting a packed-predicate preload to
+    # make TCMP/TCMPS outputs deterministic for byte-wise compares.
+    kernel_text_out = raw_kernel_for_analysis
+    if has_packed_pred_mask and output_ptrs:
+        # Only handle the common packed-mask case (u8 output).
+        mask_out = next((p for p in output_ptrs if p["cpp_type"] == "uint8_t"), None)
+        if mask_out is not None:
+            m = re.search(r"\bTCMPS?\s*\(\s*(\w+)\s*,", raw_kernel_for_analysis)
+            if m:
+                kernel_text_out = _inject_packed_pred_mask_preload(
+                    kernel_text_out,
+                    dst_tile=m.group(1),
+                    output_ptr=mask_out["name"],
+                    output_cpp_type=mask_out["cpp_type"],
+                    rows=rows,
+                    cols=cols,
+                    logical_elem_count=logical_elem_count,
+                )
+
+    kernel_out = output_dir / f"{testcase}_kernel.cpp"
+    kernel_out.write_text(_replace_includes(kernel_text_out), encoding="utf-8")
 
     launch_fn_params = ", ".join(launch_decl_params + ["void *stream"])
     kernel_call_args = []
@@ -1087,9 +1183,14 @@ endif()
         np_dtype = _np_dtype_for_cpp(p["cpp_type"])
         name = p["name"]
         eps = _default_eps_for_cpp_type(p["cpp_type"])
-        compare_lines.append(
-            f"    ok = compare_bin(\"golden_{name}.bin\", \"{name}.bin\", {np_dtype}, {eps}) and ok"
-        )
+        if has_packed_pred_mask and p["cpp_type"] in {"uint8_t", "int8_t"}:
+            compare_lines.append(
+                f"    ok = compare_packed_pred_mask(\"golden_{name}.bin\", \"{name}.bin\", {rows}, {cols}) and ok"
+            )
+        else:
+            compare_lines.append(
+                f"    ok = compare_bin(\"golden_{name}.bin\", \"{name}.bin\", {np_dtype}, {eps}) and ok"
+            )
     compare_py = compare_template.replace("@COMPARES@", "\n".join(compare_lines))
     (output_dir / "compare.py").write_text(compare_py, encoding="utf-8")
 
