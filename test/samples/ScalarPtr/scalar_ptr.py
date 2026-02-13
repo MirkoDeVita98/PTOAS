@@ -25,10 +25,10 @@ def build():
                 c8 = arith.ConstantOp(idx, 8).result
 
                 src, dst = entry.arguments
-                src_off = pto.AddPtr(src, c8).result
+                src_off = pto.addptr(src, c8)
 
-                val = pto.LoadScalar(f32, src_off, c4).value
-                pto.StoreScalar(dst, c4, val)
+                val = pto.load_scalar(f32, src_off, c4)
+                pto.store_scalar(dst, c4, val)
 
                 func.ReturnOp([])
 
