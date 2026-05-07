@@ -1,0 +1,828 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = (!pto.ptr<f32>, !pto.ptr<f16>, !pto.ptr<f16>, !pto.ptr<f16>, !pto.ptr<f16>, i64, i64) -> (), sym_name = "cube_kernel"}> ({
+  ^bb0(%arg15: !pto.ptr<f32>, %arg16: !pto.ptr<f16>, %arg17: !pto.ptr<f16>, %arg18: !pto.ptr<f16>, %arg19: !pto.ptr<f16>, %arg20: i64, %arg21: i64):
+    %200 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %201 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %202 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %203 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %204 = "arith.constant"() <{value = 256 : index}> : () -> index
+    %205 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %206 = "arith.constant"() <{value = 524288 : index}> : () -> index
+    %207 = "arith.constant"() <{value = 1048576 : index}> : () -> index
+    %208 = "pto.get_block_idx"() : () -> i64
+    %209 = "arith.index_cast"(%208) : (i64) -> index
+    %210 = "arith.index_cast"(%arg20) : (i64) -> index
+    %211 = "arith.index_cast"(%arg21) : (i64) -> index
+    %212 = "arith.divsi"(%211, %204) : (index, index) -> index
+    %213 = "arith.muli"(%209, %202) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %214 = "arith.muli"(%209, %206) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %215 = "pto.addptr"(%arg15, %214) : (!pto.ptr<f32>, index) -> !pto.ptr<f32>
+    %216 = "arith.muli"(%209, %207) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %217 = "pto.addptr"(%arg16, %216) : (!pto.ptr<f16>, index) -> !pto.ptr<f16>
+    %218 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %219 = "pto.addptr"(%215, %218) : (!pto.ptr<f32>, index) -> !pto.ptr<f32>
+    %220 = "arith.constant"() <{value = 524288 : index}> : () -> index
+    %221 = "pto.addptr"(%217, %220) : (!pto.ptr<f16>, index) -> !pto.ptr<f16>
+    %222 = "arith.constant"() <{value = 393216 : index}> : () -> index
+    %223 = "pto.addptr"(%215, %222) : (!pto.ptr<f32>, index) -> !pto.ptr<f32>
+    %224 = "pto.make_tensor_view"(%219, %202, %204, %204, %201) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.ptr<f32>, index, index, index, index) -> !pto.tensor_view<128x256xf32>
+    %225 = "pto.initialize_l2g2l_pipe"(%224) <{dir_mask = 1 : i8, flag_base = 0 : i32, operandSegmentSizes = array<i32: 1, 0, 0>, slot_num = 8 : i32, slot_size = 131072 : i32}> : (!pto.tensor_view<128x256xf32>) -> !pto.pipe
+    %226 = "pto.make_tensor_view"(%221, %202, %204, %204, %201) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.ptr<f16>, index, index, index, index) -> !pto.tensor_view<128x256xf16>
+    %227 = "pto.initialize_l2g2l_pipe"(%226) <{dir_mask = 2 : i8, flag_base = 2 : i32, operandSegmentSizes = array<i32: 1, 0, 0>, slot_num = 8 : i32, slot_size = 65536 : i32}> : (!pto.tensor_view<128x256xf16>) -> !pto.pipe
+    %228 = "pto.make_tensor_view"(%223, %202, %203, %203, %201) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.ptr<f32>, index, index, index, index) -> !pto.tensor_view<128x128xf32>
+    %229 = "pto.initialize_l2g2l_pipe"(%228) <{dir_mask = 1 : i8, flag_base = 4 : i32, operandSegmentSizes = array<i32: 1, 0, 0>, slot_num = 8 : i32, slot_size = 65536 : i32}> : (!pto.tensor_view<128x128xf32>) -> !pto.pipe
+    %230 = "pto.make_tensor_view"(%arg17, %210, %203, %203, %201) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.ptr<f16>, index, index, index, index) -> !pto.tensor_view<?x?xf16>
+    %231 = "pto.make_tensor_view"(%arg18, %203, %211, %201, %203) <{layout = #pto.layout<dn>, operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.ptr<f16>, index, index, index, index) -> !pto.tensor_view<?x?xf16>
+    %232 = "pto.make_tensor_view"(%arg19, %211, %203, %203, %201) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.ptr<f16>, index, index, index, index) -> !pto.tensor_view<?x?xf16>
+    %233 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>
+    %234 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<left, 128x128xf16, slayout=row_major>
+    %235 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<mat, 128x128xf16, slayout=col_major>
+    %236 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<right, 128x128xf16, slayout=col_major>
+    %237 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>
+    %238 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>
+    %239 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<left, 128x128xf16, slayout=row_major>
+    %240 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>
+    %241 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<right, 128x128xf16, slayout=col_major>
+    %242 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>
+    %243 = "pto.partition_view"(%230, %213, %200, %202, %203) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%243, %233) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+    "pto.tmov"(%233, %234) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<left, 128x128xf16, slayout=row_major>) -> ()
+    %244 = "pto.declare_global"() : () -> !pto.tensor_view<128x256xf32>
+    %245 = "pto.declare_global"() : () -> !pto.tensor_view<128x256xf16>
+    %246 = "pto.declare_global"() : () -> !pto.tensor_view<128x128xf32>
+    %247 = "arith.constant"() <{value = 0 : index}> : () -> index
+    "pto.talloc"(%244, %225) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf32>, !pto.pipe) -> ()
+    %248 = "arith.muli"(%247, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %249 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %250 = "arith.addi"(%248, %249) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %251 = "pto.partition_view"(%231, %200, %250, %203, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%251, %235) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmov"(%235, %236) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, slayout=col_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmatmul"(%234, %236, %237) : (!pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+    %252 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %253 = "pto.partition_view"(%244, %200, %252, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf32>
+    "pto.tstore"(%237, %253) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.partition_tensor_view<128x128xf32>) -> ()
+    %254 = "arith.muli"(%247, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %255 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %256 = "arith.addi"(%254, %255) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %257 = "pto.partition_view"(%231, %200, %256, %203, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%257, %235) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmov"(%235, %236) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, slayout=col_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmatmul"(%234, %236, %237) : (!pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+    %258 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %259 = "pto.partition_view"(%244, %200, %258, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf32>
+    "pto.tstore"(%237, %259) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.partition_tensor_view<128x128xf32>) -> ()
+    "pto.tpush"(%244, %225) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf32>, !pto.pipe) -> ()
+    %260 = "arith.constant"() <{value = 1 : index}> : () -> index
+    "pto.talloc"(%244, %225) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf32>, !pto.pipe) -> ()
+    %261 = "arith.muli"(%260, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %262 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %263 = "arith.addi"(%261, %262) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %264 = "pto.partition_view"(%231, %200, %263, %203, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%264, %235) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmov"(%235, %236) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, slayout=col_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmatmul"(%234, %236, %237) : (!pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+    %265 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %266 = "pto.partition_view"(%244, %200, %265, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf32>
+    "pto.tstore"(%237, %266) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.partition_tensor_view<128x128xf32>) -> ()
+    %267 = "arith.muli"(%260, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %268 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %269 = "arith.addi"(%267, %268) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %270 = "pto.partition_view"(%231, %200, %269, %203, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%270, %235) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmov"(%235, %236) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, slayout=col_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmatmul"(%234, %236, %237) : (!pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+    %271 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %272 = "pto.partition_view"(%244, %200, %271, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf32>
+    "pto.tstore"(%237, %272) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.partition_tensor_view<128x128xf32>) -> ()
+    "pto.tpush"(%244, %225) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf32>, !pto.pipe) -> ()
+    %273 = "arith.constant"() <{value = 2 : index}> : () -> index
+    "pto.talloc"(%244, %225) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf32>, !pto.pipe) -> ()
+    %274 = "arith.muli"(%273, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %275 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %276 = "arith.addi"(%274, %275) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %277 = "pto.partition_view"(%231, %200, %276, %203, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%277, %235) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmov"(%235, %236) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, slayout=col_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmatmul"(%234, %236, %237) : (!pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+    %278 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %279 = "pto.partition_view"(%244, %200, %278, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf32>
+    "pto.tstore"(%237, %279) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.partition_tensor_view<128x128xf32>) -> ()
+    %280 = "arith.muli"(%273, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %281 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %282 = "arith.addi"(%280, %281) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %283 = "pto.partition_view"(%231, %200, %282, %203, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%283, %235) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmov"(%235, %236) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, slayout=col_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmatmul"(%234, %236, %237) : (!pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+    %284 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %285 = "pto.partition_view"(%244, %200, %284, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf32>
+    "pto.tstore"(%237, %285) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.partition_tensor_view<128x128xf32>) -> ()
+    "pto.tpush"(%244, %225) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf32>, !pto.pipe) -> ()
+    %286 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %287 = "arith.subi"(%212, %286) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    "scf.for"(%200, %287, %201) ({
+    ^bb0(%arg22: index):
+      %333 = "arith.addi"(%arg22, %286) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+      "pto.tpop"(%245, %227) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf16>, !pto.pipe) -> ()
+      %334 = "arith.muli"(%arg22, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+      %335 = "arith.constant"() <{value = 0 : index}> : () -> index
+      %336 = "arith.addi"(%334, %335) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+      %337 = "pto.partition_view"(%232, %336, %200, %205, %203) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+      "pto.tload"(%337, %240) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+      %338 = "arith.constant"() <{value = 0 : index}> : () -> index
+      %339 = "pto.partition_view"(%245, %200, %338, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+      "pto.tload"(%339, %238) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+      "pto.tmov"(%238, %239) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<left, 128x128xf16, slayout=row_major>) -> ()
+      "pto.tmov"(%240, %241) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+      "pto.tmatmul"(%239, %241, %242) : (!pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+      "pto.talloc"(%244, %225) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf32>, !pto.pipe) -> ()
+      %340 = "arith.muli"(%333, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+      %341 = "arith.constant"() <{value = 0 : index}> : () -> index
+      %342 = "arith.addi"(%340, %341) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+      %343 = "pto.partition_view"(%231, %200, %342, %203, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+      "pto.tload"(%343, %235) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, slayout=col_major>) -> ()
+      "pto.tmov"(%235, %236) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, slayout=col_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+      "pto.tmatmul"(%234, %236, %237) : (!pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+      %344 = "arith.constant"() <{value = 0 : index}> : () -> index
+      %345 = "pto.partition_view"(%244, %200, %344, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf32>
+      "pto.tstore"(%237, %345) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.partition_tensor_view<128x128xf32>) -> ()
+      %346 = "arith.muli"(%arg22, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+      %347 = "arith.constant"() <{value = 128 : index}> : () -> index
+      %348 = "arith.addi"(%346, %347) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+      %349 = "pto.partition_view"(%232, %348, %200, %205, %203) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+      "pto.tload"(%349, %240) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+      %350 = "arith.constant"() <{value = 128 : index}> : () -> index
+      %351 = "pto.partition_view"(%245, %200, %350, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+      "pto.tload"(%351, %238) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+      "pto.tmov"(%238, %239) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<left, 128x128xf16, slayout=row_major>) -> ()
+      "pto.tmov"(%240, %241) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+      "pto.tmatmul.acc"(%242, %239, %241, %242) : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+      "pto.tfree"(%245, %227) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf16>, !pto.pipe) -> ()
+      "pto.talloc"(%246, %229) <{split = 1 : i8}> : (!pto.tensor_view<128x128xf32>, !pto.pipe) -> ()
+      %352 = "pto.partition_view"(%246, %200, %200, %202, %203) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x128xf32>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf32>
+      "pto.tstore"(%242, %352) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.partition_tensor_view<128x128xf32>) -> ()
+      "pto.tpush"(%246, %229) <{split = 1 : i8}> : (!pto.tensor_view<128x128xf32>, !pto.pipe) -> ()
+      %353 = "arith.muli"(%333, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+      %354 = "arith.constant"() <{value = 128 : index}> : () -> index
+      %355 = "arith.addi"(%353, %354) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+      %356 = "pto.partition_view"(%231, %200, %355, %203, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+      "pto.tload"(%356, %235) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, slayout=col_major>) -> ()
+      "pto.tmov"(%235, %236) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, slayout=col_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+      "pto.tmatmul"(%234, %236, %237) : (!pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+      %357 = "arith.constant"() <{value = 128 : index}> : () -> index
+      %358 = "pto.partition_view"(%244, %200, %357, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf32>
+      "pto.tstore"(%237, %358) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.partition_tensor_view<128x128xf32>) -> ()
+      "pto.tpush"(%244, %225) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf32>, !pto.pipe) -> ()
+      "scf.yield"() : () -> ()
+    }) : (index, index, index) -> ()
+    %288 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %289 = "arith.addi"(%287, %288) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    "pto.tpop"(%245, %227) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf16>, !pto.pipe) -> ()
+    %290 = "arith.muli"(%289, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %291 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %292 = "arith.addi"(%290, %291) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %293 = "pto.partition_view"(%232, %292, %200, %205, %203) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%293, %240) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+    %294 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %295 = "pto.partition_view"(%245, %200, %294, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%295, %238) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+    "pto.tmov"(%238, %239) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<left, 128x128xf16, slayout=row_major>) -> ()
+    "pto.tmov"(%240, %241) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmatmul"(%239, %241, %242) : (!pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+    %296 = "arith.muli"(%289, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %297 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %298 = "arith.addi"(%296, %297) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %299 = "pto.partition_view"(%232, %298, %200, %205, %203) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%299, %240) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+    %300 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %301 = "pto.partition_view"(%245, %200, %300, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%301, %238) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+    "pto.tmov"(%238, %239) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<left, 128x128xf16, slayout=row_major>) -> ()
+    "pto.tmov"(%240, %241) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmatmul.acc"(%242, %239, %241, %242) : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+    "pto.tfree"(%245, %227) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf16>, !pto.pipe) -> ()
+    "pto.talloc"(%246, %229) <{split = 1 : i8}> : (!pto.tensor_view<128x128xf32>, !pto.pipe) -> ()
+    %302 = "pto.partition_view"(%246, %200, %200, %202, %203) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x128xf32>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf32>
+    "pto.tstore"(%242, %302) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.partition_tensor_view<128x128xf32>) -> ()
+    "pto.tpush"(%246, %229) <{split = 1 : i8}> : (!pto.tensor_view<128x128xf32>, !pto.pipe) -> ()
+    %303 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %304 = "arith.addi"(%287, %303) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    "pto.tpop"(%245, %227) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf16>, !pto.pipe) -> ()
+    %305 = "arith.muli"(%304, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %306 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %307 = "arith.addi"(%305, %306) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %308 = "pto.partition_view"(%232, %307, %200, %205, %203) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%308, %240) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+    %309 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %310 = "pto.partition_view"(%245, %200, %309, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%310, %238) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+    "pto.tmov"(%238, %239) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<left, 128x128xf16, slayout=row_major>) -> ()
+    "pto.tmov"(%240, %241) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmatmul"(%239, %241, %242) : (!pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+    %311 = "arith.muli"(%304, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %312 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %313 = "arith.addi"(%311, %312) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %314 = "pto.partition_view"(%232, %313, %200, %205, %203) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%314, %240) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+    %315 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %316 = "pto.partition_view"(%245, %200, %315, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%316, %238) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+    "pto.tmov"(%238, %239) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<left, 128x128xf16, slayout=row_major>) -> ()
+    "pto.tmov"(%240, %241) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmatmul.acc"(%242, %239, %241, %242) : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+    "pto.tfree"(%245, %227) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf16>, !pto.pipe) -> ()
+    "pto.talloc"(%246, %229) <{split = 1 : i8}> : (!pto.tensor_view<128x128xf32>, !pto.pipe) -> ()
+    %317 = "pto.partition_view"(%246, %200, %200, %202, %203) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x128xf32>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf32>
+    "pto.tstore"(%242, %317) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.partition_tensor_view<128x128xf32>) -> ()
+    "pto.tpush"(%246, %229) <{split = 1 : i8}> : (!pto.tensor_view<128x128xf32>, !pto.pipe) -> ()
+    %318 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %319 = "arith.addi"(%287, %318) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    "pto.tpop"(%245, %227) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf16>, !pto.pipe) -> ()
+    %320 = "arith.muli"(%319, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %321 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %322 = "arith.addi"(%320, %321) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %323 = "pto.partition_view"(%232, %322, %200, %205, %203) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%323, %240) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+    %324 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %325 = "pto.partition_view"(%245, %200, %324, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%325, %238) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+    "pto.tmov"(%238, %239) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<left, 128x128xf16, slayout=row_major>) -> ()
+    "pto.tmov"(%240, %241) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmatmul"(%239, %241, %242) : (!pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+    %326 = "arith.muli"(%319, %204) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %327 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %328 = "arith.addi"(%326, %327) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %329 = "pto.partition_view"(%232, %328, %200, %205, %203) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%329, %240) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+    %330 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %331 = "pto.partition_view"(%245, %200, %330, %202, %205) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf16>
+    "pto.tload"(%331, %238) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<128x128xf16>, !pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>) -> ()
+    "pto.tmov"(%238, %239) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<left, 128x128xf16, slayout=row_major>) -> ()
+    "pto.tmov"(%240, %241) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<mat, 128x128xf16, blayout=col_major, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>) -> ()
+    "pto.tmatmul.acc"(%242, %239, %241, %242) : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.tile_buf<left, 128x128xf16, slayout=row_major>, !pto.tile_buf<right, 128x128xf16, slayout=col_major>, !pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>) -> ()
+    "pto.tfree"(%245, %227) <{split = 1 : i8}> : (!pto.tensor_view<128x256xf16>, !pto.pipe) -> ()
+    "pto.talloc"(%246, %229) <{split = 1 : i8}> : (!pto.tensor_view<128x128xf32>, !pto.pipe) -> ()
+    %332 = "pto.partition_view"(%246, %200, %200, %202, %203) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<128x128xf32>, index, index, index, index) -> !pto.partition_tensor_view<128x128xf32>
+    "pto.tstore"(%242, %332) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<acc, 128x128xf32, blayout=col_major, slayout=row_major, fractal=1024>, !pto.partition_tensor_view<128x128xf32>) -> ()
+    "pto.tpush"(%246, %229) <{split = 1 : i8}> : (!pto.tensor_view<128x128xf32>, !pto.pipe) -> ()
+    "func.return"() : () -> ()
+  }) {pto.kernel_kind = #pto.kernel_kind<cube>} : () -> ()
+  "func.func"() <{function_type = (!pto.ptr<f32>, !pto.ptr<f16>, !pto.ptr<f32>, i64, i64) -> (), sym_name = "vector_kernel"}> ({
+  ^bb0(%arg9: !pto.ptr<f32>, %arg10: !pto.ptr<f16>, %arg11: !pto.ptr<f32>, %arg12: i64, %arg13: i64):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 64 : index}> : () -> index
+    %4 = "arith.constant"() <{value = 32 : index}> : () -> index
+    %5 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %6 = "arith.constant"() <{value = 256 : index}> : () -> index
+    %7 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %8 = "arith.constant"() <{value = 524288 : index}> : () -> index
+    %9 = "arith.constant"() <{value = 1048576 : index}> : () -> index
+    %10 = "pto.get_block_idx"() : () -> i64
+    %11 = "arith.index_cast"(%10) : (i64) -> index
+    %12 = "pto.get_subblock_idx"() : () -> i64
+    %13 = "arith.index_cast"(%12) : (i64) -> index
+    %14 = "arith.index_cast"(%arg12) : (i64) -> index
+    %15 = "arith.index_cast"(%arg13) : (i64) -> index
+    %16 = "arith.divsi"(%15, %6) : (index, index) -> index
+    %17 = "arith.muli"(%11, %2) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %18 = "arith.muli"(%13, %3) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %19 = "arith.addi"(%17, %18) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %20 = "arith.muli"(%11, %8) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %21 = "pto.addptr"(%arg9, %20) : (!pto.ptr<f32>, index) -> !pto.ptr<f32>
+    %22 = "arith.muli"(%11, %9) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %23 = "pto.addptr"(%arg10, %22) : (!pto.ptr<f16>, index) -> !pto.ptr<f16>
+    %24 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %25 = "pto.addptr"(%21, %24) : (!pto.ptr<f32>, index) -> !pto.ptr<f32>
+    %26 = "arith.constant"() <{value = 524288 : index}> : () -> index
+    %27 = "pto.addptr"(%23, %26) : (!pto.ptr<f16>, index) -> !pto.ptr<f16>
+    %28 = "arith.constant"() <{value = 393216 : index}> : () -> index
+    %29 = "pto.addptr"(%21, %28) : (!pto.ptr<f32>, index) -> !pto.ptr<f32>
+    %30 = "pto.make_tensor_view"(%25, %3, %6, %6, %1) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.ptr<f32>, index, index, index, index) -> !pto.tensor_view<64x256xf32>
+    %31 = "pto.initialize_l2g2l_pipe"(%30) <{dir_mask = 1 : i8, flag_base = 0 : i32, operandSegmentSizes = array<i32: 1, 0, 0>, slot_num = 8 : i32, slot_size = 131072 : i32}> : (!pto.tensor_view<64x256xf32>) -> !pto.pipe
+    %32 = "pto.make_tensor_view"(%27, %3, %6, %6, %1) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.ptr<f16>, index, index, index, index) -> !pto.tensor_view<64x256xf16>
+    %33 = "pto.initialize_l2g2l_pipe"(%32) <{dir_mask = 2 : i8, flag_base = 2 : i32, operandSegmentSizes = array<i32: 1, 0, 0>, slot_num = 8 : i32, slot_size = 65536 : i32}> : (!pto.tensor_view<64x256xf16>) -> !pto.pipe
+    %34 = "pto.make_tensor_view"(%29, %3, %5, %5, %1) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.ptr<f32>, index, index, index, index) -> !pto.tensor_view<64x128xf32>
+    %35 = "pto.initialize_l2g2l_pipe"(%34) <{dir_mask = 1 : i8, flag_base = 4 : i32, operandSegmentSizes = array<i32: 1, 0, 0>, slot_num = 8 : i32, slot_size = 65536 : i32}> : (!pto.tensor_view<64x128xf32>) -> !pto.pipe
+    %36 = "pto.make_tensor_view"(%arg11, %14, %5, %5, %1) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.ptr<f32>, index, index, index, index) -> !pto.tensor_view<?x?xf32>
+    %37 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x256xf32>
+    %38 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x256xf32>
+    %39 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x256xf32>
+    %40 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x256xf16>
+    %41 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x128xf32>
+    %42 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x128xf32>
+    %43 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x128xf32>
+    %44 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x128xf32>
+    %45 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x1xf32, blayout=col_major>
+    %46 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x1xf32, blayout=col_major>
+    %47 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x1xf32, blayout=col_major>
+    %48 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x1xf32, blayout=col_major>
+    %49 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x1xf32, blayout=col_major>
+    %50 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x1xf32, blayout=col_major>
+    %51 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x1xf32, blayout=col_major>
+    %52 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x1xf32, blayout=col_major>
+    %53 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x1xf32, blayout=col_major>
+    %54 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x1xf32, blayout=col_major>
+    %55 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x1xf32, blayout=col_major>
+    %56 = "pto.alloc_tile"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> !pto.tile_buf<vec, 32x1xf32, blayout=col_major>
+    %57 = "arith.constant"() <{value = 0.0883883461 : f32}> : () -> f32
+    %58 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %59 = "pto.declare_global"() : () -> !pto.tensor_view<64x256xf32>
+    %60 = "pto.declare_global"() : () -> !pto.tensor_view<64x256xf16>
+    %61 = "pto.declare_global"() : () -> !pto.tensor_view<64x128xf32>
+    "pto.tpop"(%59, %31) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf32>, !pto.pipe) -> ()
+    %62 = "pto.partition_view"(%59, %0, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf32>
+    %63 = "pto.partition_view"(%59, %4, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf32>
+    "pto.tload"(%62, %37) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.tload"(%63, %38) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.tfree"(%59, %31) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf32>, !pto.pipe) -> ()
+    "pto.tmuls"(%37, %57, %37) : (!pto.tile_buf<vec, 32x256xf32>, f32, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.trowmax"(%37, %39, %45) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+    "pto.trowexpandsub"(%37, %45, %37) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.texp"(%37, %37) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.trowsum"(%37, %39, %48) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+    "pto.tmuls"(%38, %57, %38) : (!pto.tile_buf<vec, 32x256xf32>, f32, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.trowmax"(%38, %39, %46) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+    "pto.trowexpandsub"(%38, %46, %38) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.texp"(%38, %38) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.trowsum"(%38, %39, %49) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+    "pto.talloc"(%60, %33) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf16>, !pto.pipe) -> ()
+    "pto.tcvt"(%37, %40) <{rmode = #pto<round_mode CAST_RINT>}> : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf16>) -> ()
+    %64 = "pto.partition_view"(%60, %0, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf16>
+    "pto.tstore"(%40, %64) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<vec, 32x256xf16>, !pto.partition_tensor_view<32x256xf16>) -> ()
+    "pto.tcvt"(%38, %40) <{rmode = #pto<round_mode CAST_RINT>}> : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf16>) -> ()
+    %65 = "pto.partition_view"(%60, %4, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf16>
+    "pto.tstore"(%40, %65) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<vec, 32x256xf16>, !pto.partition_tensor_view<32x256xf16>) -> ()
+    "pto.tpush"(%60, %33) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf16>, !pto.pipe) -> ()
+    %66 = "arith.constant"() <{value = 1 : index}> : () -> index
+    "pto.tpop"(%59, %31) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf32>, !pto.pipe) -> ()
+    %67 = "pto.partition_view"(%59, %0, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf32>
+    %68 = "pto.partition_view"(%59, %4, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf32>
+    "pto.tload"(%67, %37) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.tload"(%68, %38) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.tfree"(%59, %31) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf32>, !pto.pipe) -> ()
+    "pto.tmuls"(%37, %57, %37) : (!pto.tile_buf<vec, 32x256xf32>, f32, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.trowmax"(%37, %39, %47) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+    %69 = "pto.treshape"(%47) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %70 = "pto.treshape"(%52) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %71 = "pto.treshape"(%45) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %72 = "pto.treshape"(%48) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %73 = "pto.treshape"(%50) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    "pto.tmax"(%69, %71, %69) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.tsub"(%71, %69, %70) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.texp"(%70, %70) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.tmov"(%69, %71) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.tmul"(%72, %70, %72) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.trowexpandsub"(%37, %47, %37) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.texp"(%37, %37) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.trowsum"(%37, %39, %50) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+    "pto.tadd"(%72, %73, %72) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.tmuls"(%38, %57, %38) : (!pto.tile_buf<vec, 32x256xf32>, f32, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.trowmax"(%38, %39, %47) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+    %74 = "pto.treshape"(%47) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %75 = "pto.treshape"(%55) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %76 = "pto.treshape"(%46) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %77 = "pto.treshape"(%49) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %78 = "pto.treshape"(%50) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    "pto.tmax"(%74, %76, %74) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.tsub"(%76, %74, %75) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.texp"(%75, %75) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.tmov"(%74, %76) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.tmul"(%77, %75, %77) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.trowexpandsub"(%38, %47, %38) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.texp"(%38, %38) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.trowsum"(%38, %39, %50) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+    "pto.tadd"(%77, %78, %77) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.talloc"(%60, %33) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf16>, !pto.pipe) -> ()
+    "pto.tcvt"(%37, %40) <{rmode = #pto<round_mode CAST_RINT>}> : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf16>) -> ()
+    %79 = "pto.partition_view"(%60, %0, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf16>
+    "pto.tstore"(%40, %79) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<vec, 32x256xf16>, !pto.partition_tensor_view<32x256xf16>) -> ()
+    "pto.tcvt"(%38, %40) <{rmode = #pto<round_mode CAST_RINT>}> : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf16>) -> ()
+    %80 = "pto.partition_view"(%60, %4, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf16>
+    "pto.tstore"(%40, %80) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<vec, 32x256xf16>, !pto.partition_tensor_view<32x256xf16>) -> ()
+    "pto.tpush"(%60, %33) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf16>, !pto.pipe) -> ()
+    %81 = "arith.constant"() <{value = 2 : index}> : () -> index
+    "pto.tpop"(%59, %31) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf32>, !pto.pipe) -> ()
+    %82 = "pto.partition_view"(%59, %0, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf32>
+    %83 = "pto.partition_view"(%59, %4, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf32>
+    "pto.tload"(%82, %37) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.tload"(%83, %38) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.tfree"(%59, %31) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf32>, !pto.pipe) -> ()
+    "pto.tmuls"(%37, %57, %37) : (!pto.tile_buf<vec, 32x256xf32>, f32, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.trowmax"(%37, %39, %47) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+    %84 = "pto.treshape"(%47) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %85 = "pto.treshape"(%53) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %86 = "pto.treshape"(%45) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %87 = "pto.treshape"(%48) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %88 = "pto.treshape"(%50) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    "pto.tmax"(%84, %86, %84) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.tsub"(%86, %84, %85) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.texp"(%85, %85) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.tmov"(%84, %86) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.tmul"(%87, %85, %87) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.trowexpandsub"(%37, %47, %37) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.texp"(%37, %37) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.trowsum"(%37, %39, %50) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+    "pto.tadd"(%87, %88, %87) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.tmuls"(%38, %57, %38) : (!pto.tile_buf<vec, 32x256xf32>, f32, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.trowmax"(%38, %39, %47) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+    %89 = "pto.treshape"(%47) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %90 = "pto.treshape"(%56) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %91 = "pto.treshape"(%46) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %92 = "pto.treshape"(%49) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    %93 = "pto.treshape"(%50) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+    "pto.tmax"(%89, %91, %89) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.tsub"(%91, %89, %90) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.texp"(%90, %90) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.tmov"(%89, %91) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.tmul"(%92, %90, %92) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.trowexpandsub"(%38, %47, %38) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.texp"(%38, %38) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+    "pto.trowsum"(%38, %39, %50) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+    "pto.tadd"(%92, %93, %92) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+    "pto.talloc"(%60, %33) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf16>, !pto.pipe) -> ()
+    "pto.tcvt"(%37, %40) <{rmode = #pto<round_mode CAST_RINT>}> : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf16>) -> ()
+    %94 = "pto.partition_view"(%60, %0, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf16>
+    "pto.tstore"(%40, %94) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<vec, 32x256xf16>, !pto.partition_tensor_view<32x256xf16>) -> ()
+    "pto.tcvt"(%38, %40) <{rmode = #pto<round_mode CAST_RINT>}> : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf16>) -> ()
+    %95 = "pto.partition_view"(%60, %4, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf16>
+    "pto.tstore"(%40, %95) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<vec, 32x256xf16>, !pto.partition_tensor_view<32x256xf16>) -> ()
+    "pto.tpush"(%60, %33) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf16>, !pto.pipe) -> ()
+    %96 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %97 = "arith.subi"(%16, %96) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %98 = "arith.cmpi"(%97, %0) <{predicate = 4 : i64}> : (index, index) -> i1
+    "scf.if"(%98) ({
+      "pto.tpop"(%61, %35) <{split = 1 : i8}> : (!pto.tensor_view<64x128xf32>, !pto.pipe) -> ()
+      %184 = "pto.partition_view"(%61, %0, %0, %4, %5) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x128xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x128xf32>
+      %185 = "pto.partition_view"(%61, %4, %0, %4, %5) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x128xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x128xf32>
+      "pto.tload"(%184, %43) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+      "pto.tload"(%185, %44) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+      "pto.tmov"(%43, %41) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+      "pto.tmov"(%44, %42) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+      "pto.tfree"(%61, %35) <{split = 1 : i8}> : (!pto.tensor_view<64x128xf32>, !pto.pipe) -> ()
+      "pto.tpop"(%59, %31) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf32>, !pto.pipe) -> ()
+      %186 = "pto.partition_view"(%59, %0, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf32>
+      %187 = "pto.partition_view"(%59, %4, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf32>
+      "pto.tload"(%186, %37) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+      "pto.tload"(%187, %38) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+      "pto.tfree"(%59, %31) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf32>, !pto.pipe) -> ()
+      "pto.tmuls"(%37, %57, %37) : (!pto.tile_buf<vec, 32x256xf32>, f32, !pto.tile_buf<vec, 32x256xf32>) -> ()
+      "pto.trowmax"(%37, %39, %47) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+      %188 = "pto.treshape"(%47) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+      %189 = "pto.treshape"(%51) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+      %190 = "pto.treshape"(%45) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+      %191 = "pto.treshape"(%48) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+      %192 = "pto.treshape"(%50) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+      "pto.tmax"(%188, %190, %188) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+      "pto.tsub"(%190, %188, %189) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+      "pto.texp"(%189, %189) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+      "pto.tmov"(%188, %190) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+      "pto.tmul"(%191, %189, %191) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+      "pto.trowexpandsub"(%37, %47, %37) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+      "pto.texp"(%37, %37) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+      "pto.trowsum"(%37, %39, %50) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+      "pto.tadd"(%191, %192, %191) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+      "pto.tmuls"(%38, %57, %38) : (!pto.tile_buf<vec, 32x256xf32>, f32, !pto.tile_buf<vec, 32x256xf32>) -> ()
+      "pto.trowmax"(%38, %39, %47) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+      %193 = "pto.treshape"(%47) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+      %194 = "pto.treshape"(%54) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+      %195 = "pto.treshape"(%46) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+      %196 = "pto.treshape"(%49) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+      %197 = "pto.treshape"(%50) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+      "pto.tmax"(%193, %195, %193) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+      "pto.tsub"(%195, %193, %194) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+      "pto.texp"(%194, %194) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+      "pto.tmov"(%193, %195) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+      "pto.tmul"(%196, %194, %196) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+      "pto.trowexpandsub"(%38, %47, %38) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+      "pto.texp"(%38, %38) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+      "pto.trowsum"(%38, %39, %50) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+      "pto.tadd"(%196, %197, %196) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+      "pto.talloc"(%60, %33) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf16>, !pto.pipe) -> ()
+      "pto.tcvt"(%37, %40) <{rmode = #pto<round_mode CAST_RINT>}> : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf16>) -> ()
+      %198 = "pto.partition_view"(%60, %0, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf16>
+      "pto.tstore"(%40, %198) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<vec, 32x256xf16>, !pto.partition_tensor_view<32x256xf16>) -> ()
+      "pto.tcvt"(%38, %40) <{rmode = #pto<round_mode CAST_RINT>}> : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf16>) -> ()
+      %199 = "pto.partition_view"(%60, %4, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf16>
+      "pto.tstore"(%40, %199) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<vec, 32x256xf16>, !pto.partition_tensor_view<32x256xf16>) -> ()
+      "pto.tpush"(%60, %33) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf16>, !pto.pipe) -> ()
+      "scf.yield"() : () -> ()
+    }, {
+    }) : (i1) -> ()
+    "scf.for"(%1, %97, %1) ({
+    ^bb0(%arg14: index):
+      %135 = "arith.addi"(%arg14, %96) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+      "pto.tpop"(%61, %35) <{split = 1 : i8}> : (!pto.tensor_view<64x128xf32>, !pto.pipe) -> ()
+      %136 = "pto.partition_view"(%61, %0, %0, %4, %5) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x128xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x128xf32>
+      %137 = "pto.partition_view"(%61, %4, %0, %4, %5) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x128xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x128xf32>
+      "pto.tload"(%136, %43) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+      "pto.tload"(%137, %44) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+      %138 = "arith.remsi"(%arg14, %58) : (index, index) -> index
+      %139 = "arith.constant"() <{value = 0 : index}> : () -> index
+      %140 = "arith.cmpi"(%138, %139) <{predicate = 0 : i64}> : (index, index) -> i1
+      "scf.if"(%140) ({
+        "pto.trowexpandmul"(%41, %51, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "pto.tadd"(%41, %43, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "pto.trowexpandmul"(%42, %54, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "pto.tadd"(%42, %44, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "scf.yield"() : () -> ()
+      }, {
+        %181 = "arith.remsi"(%arg14, %58) : (index, index) -> index
+        %182 = "arith.constant"() <{value = 1 : index}> : () -> index
+        %183 = "arith.cmpi"(%181, %182) <{predicate = 0 : i64}> : (index, index) -> i1
+        "scf.if"(%183) ({
+          "pto.trowexpandmul"(%41, %52, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%41, %43, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.trowexpandmul"(%42, %55, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%42, %44, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "scf.yield"() : () -> ()
+        }, {
+          "pto.trowexpandmul"(%41, %53, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%41, %43, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.trowexpandmul"(%42, %56, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%42, %44, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "scf.yield"() : () -> ()
+        }) : (i1) -> ()
+        "scf.yield"() : () -> ()
+      }) : (i1) -> ()
+      "pto.tfree"(%61, %35) <{split = 1 : i8}> : (!pto.tensor_view<64x128xf32>, !pto.pipe) -> ()
+      "pto.tpop"(%59, %31) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf32>, !pto.pipe) -> ()
+      %141 = "pto.partition_view"(%59, %0, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf32>
+      %142 = "pto.partition_view"(%59, %4, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf32>
+      "pto.tload"(%141, %37) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+      "pto.tload"(%142, %38) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+      "pto.tfree"(%59, %31) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf32>, !pto.pipe) -> ()
+      %143 = "arith.remsi"(%135, %58) : (index, index) -> index
+      %144 = "arith.constant"() <{value = 0 : index}> : () -> index
+      %145 = "arith.cmpi"(%143, %144) <{predicate = 0 : i64}> : (index, index) -> i1
+      "scf.if"(%145) ({
+        "pto.tmuls"(%37, %57, %37) : (!pto.tile_buf<vec, 32x256xf32>, f32, !pto.tile_buf<vec, 32x256xf32>) -> ()
+        "pto.trowmax"(%37, %39, %47) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+        %171 = "pto.treshape"(%47) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+        %172 = "pto.treshape"(%51) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+        %173 = "pto.treshape"(%45) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+        %174 = "pto.treshape"(%48) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+        %175 = "pto.treshape"(%50) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+        "pto.tmax"(%171, %173, %171) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+        "pto.tsub"(%173, %171, %172) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+        "pto.texp"(%172, %172) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+        "pto.tmov"(%171, %173) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+        "pto.tmul"(%174, %172, %174) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+        "pto.trowexpandsub"(%37, %47, %37) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+        "pto.texp"(%37, %37) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+        "pto.trowsum"(%37, %39, %50) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+        "pto.tadd"(%174, %175, %174) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+        "pto.tmuls"(%38, %57, %38) : (!pto.tile_buf<vec, 32x256xf32>, f32, !pto.tile_buf<vec, 32x256xf32>) -> ()
+        "pto.trowmax"(%38, %39, %47) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+        %176 = "pto.treshape"(%47) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+        %177 = "pto.treshape"(%54) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+        %178 = "pto.treshape"(%46) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+        %179 = "pto.treshape"(%49) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+        %180 = "pto.treshape"(%50) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+        "pto.tmax"(%176, %178, %176) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+        "pto.tsub"(%178, %176, %177) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+        "pto.texp"(%177, %177) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+        "pto.tmov"(%176, %178) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+        "pto.tmul"(%179, %177, %179) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+        "pto.trowexpandsub"(%38, %47, %38) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+        "pto.texp"(%38, %38) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+        "pto.trowsum"(%38, %39, %50) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+        "pto.tadd"(%179, %180, %179) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+        "scf.yield"() : () -> ()
+      }, {
+        %148 = "arith.remsi"(%135, %58) : (index, index) -> index
+        %149 = "arith.constant"() <{value = 1 : index}> : () -> index
+        %150 = "arith.cmpi"(%148, %149) <{predicate = 0 : i64}> : (index, index) -> i1
+        "scf.if"(%150) ({
+          "pto.tmuls"(%37, %57, %37) : (!pto.tile_buf<vec, 32x256xf32>, f32, !pto.tile_buf<vec, 32x256xf32>) -> ()
+          "pto.trowmax"(%37, %39, %47) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+          %161 = "pto.treshape"(%47) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %162 = "pto.treshape"(%52) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %163 = "pto.treshape"(%45) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %164 = "pto.treshape"(%48) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %165 = "pto.treshape"(%50) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          "pto.tmax"(%161, %163, %161) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.tsub"(%163, %161, %162) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.texp"(%162, %162) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.tmov"(%161, %163) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.tmul"(%164, %162, %164) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.trowexpandsub"(%37, %47, %37) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+          "pto.texp"(%37, %37) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+          "pto.trowsum"(%37, %39, %50) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+          "pto.tadd"(%164, %165, %164) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.tmuls"(%38, %57, %38) : (!pto.tile_buf<vec, 32x256xf32>, f32, !pto.tile_buf<vec, 32x256xf32>) -> ()
+          "pto.trowmax"(%38, %39, %47) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+          %166 = "pto.treshape"(%47) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %167 = "pto.treshape"(%55) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %168 = "pto.treshape"(%46) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %169 = "pto.treshape"(%49) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %170 = "pto.treshape"(%50) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          "pto.tmax"(%166, %168, %166) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.tsub"(%168, %166, %167) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.texp"(%167, %167) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.tmov"(%166, %168) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.tmul"(%169, %167, %169) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.trowexpandsub"(%38, %47, %38) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+          "pto.texp"(%38, %38) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+          "pto.trowsum"(%38, %39, %50) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+          "pto.tadd"(%169, %170, %169) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "scf.yield"() : () -> ()
+        }, {
+          "pto.tmuls"(%37, %57, %37) : (!pto.tile_buf<vec, 32x256xf32>, f32, !pto.tile_buf<vec, 32x256xf32>) -> ()
+          "pto.trowmax"(%37, %39, %47) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+          %151 = "pto.treshape"(%47) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %152 = "pto.treshape"(%53) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %153 = "pto.treshape"(%45) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %154 = "pto.treshape"(%48) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %155 = "pto.treshape"(%50) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          "pto.tmax"(%151, %153, %151) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.tsub"(%153, %151, %152) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.texp"(%152, %152) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.tmov"(%151, %153) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.tmul"(%154, %152, %154) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.trowexpandsub"(%37, %47, %37) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+          "pto.texp"(%37, %37) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+          "pto.trowsum"(%37, %39, %50) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+          "pto.tadd"(%154, %155, %154) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.tmuls"(%38, %57, %38) : (!pto.tile_buf<vec, 32x256xf32>, f32, !pto.tile_buf<vec, 32x256xf32>) -> ()
+          "pto.trowmax"(%38, %39, %47) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+          %156 = "pto.treshape"(%47) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %157 = "pto.treshape"(%56) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %158 = "pto.treshape"(%46) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %159 = "pto.treshape"(%49) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          %160 = "pto.treshape"(%50) : (!pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> !pto.tile_buf<vec, 1x32xf32>
+          "pto.tmax"(%156, %158, %156) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.tsub"(%158, %156, %157) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.texp"(%157, %157) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.tmov"(%156, %158) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.tmul"(%159, %157, %159) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "pto.trowexpandsub"(%38, %47, %38) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+          "pto.texp"(%38, %38) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>) -> ()
+          "pto.trowsum"(%38, %39, %50) : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>) -> ()
+          "pto.tadd"(%159, %160, %159) : (!pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>, !pto.tile_buf<vec, 1x32xf32>) -> ()
+          "scf.yield"() : () -> ()
+        }) : (i1) -> ()
+        "scf.yield"() : () -> ()
+      }) : (i1) -> ()
+      "pto.talloc"(%60, %33) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf16>, !pto.pipe) -> ()
+      "pto.tcvt"(%37, %40) <{rmode = #pto<round_mode CAST_RINT>}> : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf16>) -> ()
+      %146 = "pto.partition_view"(%60, %0, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf16>
+      "pto.tstore"(%40, %146) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<vec, 32x256xf16>, !pto.partition_tensor_view<32x256xf16>) -> ()
+      "pto.tcvt"(%38, %40) <{rmode = #pto<round_mode CAST_RINT>}> : (!pto.tile_buf<vec, 32x256xf32>, !pto.tile_buf<vec, 32x256xf16>) -> ()
+      %147 = "pto.partition_view"(%60, %4, %0, %4, %6) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x256xf16>, index, index, index, index) -> !pto.partition_tensor_view<32x256xf16>
+      "pto.tstore"(%40, %147) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<vec, 32x256xf16>, !pto.partition_tensor_view<32x256xf16>) -> ()
+      "pto.tpush"(%60, %33) <{split = 1 : i8}> : (!pto.tensor_view<64x256xf16>, !pto.pipe) -> ()
+      "scf.yield"() : () -> ()
+    }) : (index, index, index) -> ()
+    %99 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %100 = "arith.addi"(%97, %99) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    "pto.tpop"(%61, %35) <{split = 1 : i8}> : (!pto.tensor_view<64x128xf32>, !pto.pipe) -> ()
+    %101 = "pto.partition_view"(%61, %0, %0, %4, %5) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x128xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x128xf32>
+    %102 = "pto.partition_view"(%61, %4, %0, %4, %5) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x128xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x128xf32>
+    "pto.tload"(%101, %43) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+    "pto.tload"(%102, %44) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+    %103 = "arith.cmpi"(%100, %0) <{predicate = 0 : i64}> : (index, index) -> i1
+    "scf.if"(%103) ({
+      "pto.tmov"(%43, %41) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+      "pto.tmov"(%44, %42) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+      "scf.yield"() : () -> ()
+    }, {
+      %129 = "arith.remsi"(%100, %58) : (index, index) -> index
+      %130 = "arith.constant"() <{value = 0 : index}> : () -> index
+      %131 = "arith.cmpi"(%129, %130) <{predicate = 0 : i64}> : (index, index) -> i1
+      "scf.if"(%131) ({
+        "pto.trowexpandmul"(%41, %51, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "pto.tadd"(%41, %43, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "pto.trowexpandmul"(%42, %54, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "pto.tadd"(%42, %44, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "scf.yield"() : () -> ()
+      }, {
+        %132 = "arith.remsi"(%100, %58) : (index, index) -> index
+        %133 = "arith.constant"() <{value = 1 : index}> : () -> index
+        %134 = "arith.cmpi"(%132, %133) <{predicate = 0 : i64}> : (index, index) -> i1
+        "scf.if"(%134) ({
+          "pto.trowexpandmul"(%41, %52, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%41, %43, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.trowexpandmul"(%42, %55, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%42, %44, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "scf.yield"() : () -> ()
+        }, {
+          "pto.trowexpandmul"(%41, %53, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%41, %43, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.trowexpandmul"(%42, %56, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%42, %44, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "scf.yield"() : () -> ()
+        }) : (i1) -> ()
+        "scf.yield"() : () -> ()
+      }) : (i1) -> ()
+      "scf.yield"() : () -> ()
+    }) : (i1) -> ()
+    "pto.tfree"(%61, %35) <{split = 1 : i8}> : (!pto.tensor_view<64x128xf32>, !pto.pipe) -> ()
+    %104 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %105 = "arith.addi"(%97, %104) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    "pto.tpop"(%61, %35) <{split = 1 : i8}> : (!pto.tensor_view<64x128xf32>, !pto.pipe) -> ()
+    %106 = "pto.partition_view"(%61, %0, %0, %4, %5) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x128xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x128xf32>
+    %107 = "pto.partition_view"(%61, %4, %0, %4, %5) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x128xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x128xf32>
+    "pto.tload"(%106, %43) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+    "pto.tload"(%107, %44) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+    %108 = "arith.cmpi"(%105, %0) <{predicate = 0 : i64}> : (index, index) -> i1
+    "scf.if"(%108) ({
+      "pto.tmov"(%43, %41) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+      "pto.tmov"(%44, %42) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+      "scf.yield"() : () -> ()
+    }, {
+      %123 = "arith.remsi"(%105, %58) : (index, index) -> index
+      %124 = "arith.constant"() <{value = 0 : index}> : () -> index
+      %125 = "arith.cmpi"(%123, %124) <{predicate = 0 : i64}> : (index, index) -> i1
+      "scf.if"(%125) ({
+        "pto.trowexpandmul"(%41, %51, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "pto.tadd"(%41, %43, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "pto.trowexpandmul"(%42, %54, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "pto.tadd"(%42, %44, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "scf.yield"() : () -> ()
+      }, {
+        %126 = "arith.remsi"(%105, %58) : (index, index) -> index
+        %127 = "arith.constant"() <{value = 1 : index}> : () -> index
+        %128 = "arith.cmpi"(%126, %127) <{predicate = 0 : i64}> : (index, index) -> i1
+        "scf.if"(%128) ({
+          "pto.trowexpandmul"(%41, %52, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%41, %43, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.trowexpandmul"(%42, %55, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%42, %44, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "scf.yield"() : () -> ()
+        }, {
+          "pto.trowexpandmul"(%41, %53, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%41, %43, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.trowexpandmul"(%42, %56, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%42, %44, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "scf.yield"() : () -> ()
+        }) : (i1) -> ()
+        "scf.yield"() : () -> ()
+      }) : (i1) -> ()
+      "scf.yield"() : () -> ()
+    }) : (i1) -> ()
+    "pto.tfree"(%61, %35) <{split = 1 : i8}> : (!pto.tensor_view<64x128xf32>, !pto.pipe) -> ()
+    %109 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %110 = "arith.addi"(%97, %109) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    "pto.tpop"(%61, %35) <{split = 1 : i8}> : (!pto.tensor_view<64x128xf32>, !pto.pipe) -> ()
+    %111 = "pto.partition_view"(%61, %0, %0, %4, %5) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x128xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x128xf32>
+    %112 = "pto.partition_view"(%61, %4, %0, %4, %5) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<64x128xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x128xf32>
+    "pto.tload"(%111, %43) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+    "pto.tload"(%112, %44) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0>}> : (!pto.partition_tensor_view<32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+    %113 = "arith.cmpi"(%110, %0) <{predicate = 0 : i64}> : (index, index) -> i1
+    "scf.if"(%113) ({
+      "pto.tmov"(%43, %41) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+      "pto.tmov"(%44, %42) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, reluPreMode = #pto<relu_pre_mode no_relu>}> : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+      "scf.yield"() : () -> ()
+    }, {
+      %117 = "arith.remsi"(%110, %58) : (index, index) -> index
+      %118 = "arith.constant"() <{value = 0 : index}> : () -> index
+      %119 = "arith.cmpi"(%117, %118) <{predicate = 0 : i64}> : (index, index) -> i1
+      "scf.if"(%119) ({
+        "pto.trowexpandmul"(%41, %51, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "pto.tadd"(%41, %43, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "pto.trowexpandmul"(%42, %54, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "pto.tadd"(%42, %44, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+        "scf.yield"() : () -> ()
+      }, {
+        %120 = "arith.remsi"(%110, %58) : (index, index) -> index
+        %121 = "arith.constant"() <{value = 1 : index}> : () -> index
+        %122 = "arith.cmpi"(%120, %121) <{predicate = 0 : i64}> : (index, index) -> i1
+        "scf.if"(%122) ({
+          "pto.trowexpandmul"(%41, %52, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%41, %43, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.trowexpandmul"(%42, %55, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%42, %44, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "scf.yield"() : () -> ()
+        }, {
+          "pto.trowexpandmul"(%41, %53, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%41, %43, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.trowexpandmul"(%42, %56, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "pto.tadd"(%42, %44, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+          "scf.yield"() : () -> ()
+        }) : (i1) -> ()
+        "scf.yield"() : () -> ()
+      }) : (i1) -> ()
+      "scf.yield"() : () -> ()
+    }) : (i1) -> ()
+    "pto.tfree"(%61, %35) <{split = 1 : i8}> : (!pto.tensor_view<64x128xf32>, !pto.pipe) -> ()
+    "pto.trowexpanddiv"(%41, %48, %41) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+    "pto.trowexpanddiv"(%42, %49, %42) : (!pto.tile_buf<vec, 32x128xf32>, !pto.tile_buf<vec, 32x1xf32, blayout=col_major>, !pto.tile_buf<vec, 32x128xf32>) -> ()
+    %114 = "pto.partition_view"(%36, %19, %0, %4, %5) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x128xf32>
+    "pto.tstore"(%41, %114) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<vec, 32x128xf32>, !pto.partition_tensor_view<32x128xf32>) -> ()
+    %115 = "arith.addi"(%19, %4) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %116 = "pto.partition_view"(%36, %115, %0, %4, %5) <{operandSegmentSizes = array<i32: 1, 2, 2>}> : (!pto.tensor_view<?x?xf32>, index, index, index, index) -> !pto.partition_tensor_view<32x128xf32>
+    "pto.tstore"(%42, %116) <{atomicType = #pto<atomic_type atomic_none>, reluPreMode = #pto<relu_pre_mode no_relu>, stPhase = #pto<st_phase unspecified>}> : (!pto.tile_buf<vec, 32x128xf32>, !pto.partition_tensor_view<32x128xf32>) -> ()
+    "func.return"() : () -> ()
+  }) {pto.kernel_kind = #pto.kernel_kind<vector>} : () -> ()
+  "func.func"() <{function_type = (memref<256xi64>, !pto.ptr<f32>, !pto.ptr<f16>, !pto.ptr<f16>, !pto.ptr<f16>, !pto.ptr<f16>, !pto.ptr<f32>, i64, i64) -> (), sym_name = "call_both"}> ({
+  ^bb0(%arg0: memref<256xi64>, %arg1: !pto.ptr<f32>, %arg2: !pto.ptr<f16>, %arg3: !pto.ptr<f16>, %arg4: !pto.ptr<f16>, %arg5: !pto.ptr<f16>, %arg6: !pto.ptr<f32>, %arg7: i64, %arg8: i64):
+    "pto.set_ffts"(%arg0) : (memref<256xi64>) -> ()
+    "func.call"(%arg1, %arg2, %arg3, %arg4, %arg5, %arg7, %arg8) <{callee = @cube_kernel}> : (!pto.ptr<f32>, !pto.ptr<f16>, !pto.ptr<f16>, !pto.ptr<f16>, !pto.ptr<f16>, i64, i64) -> ()
+    "func.call"(%arg1, %arg2, %arg6, %arg7, %arg8) <{callee = @vector_kernel}> : (!pto.ptr<f32>, !pto.ptr<f16>, !pto.ptr<f32>, i64, i64) -> ()
+    "func.return"() : () -> ()
+  }) {pto.entry} : () -> ()
+}) : () -> ()
+
