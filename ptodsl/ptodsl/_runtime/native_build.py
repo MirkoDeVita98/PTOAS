@@ -39,6 +39,10 @@ def _run(cmd: list[str], *, cwd: Path | None = None) -> None:
         )
 
 
+def _mlir_uses_vmi_dialect(mlir_text: str) -> bool:
+    return "pto.vmi." in mlir_text
+
+
 def _run_ptoas(
     mlir_path: Path,
     kernel_object: Path,
@@ -47,6 +51,7 @@ def _run_ptoas(
     insert_sync: bool | None = None,
     backend: str | None = None,
     pto_level: str | None = None,
+    enable_vmi: bool = False,
 ) -> None:
     ptoas = resolve_ptoas_binary()
     cmd = [
@@ -59,6 +64,11 @@ def _run_ptoas(
         cmd.append(f"--pto-level={pto_level}")
     if insert_sync is True:
         cmd.append("--enable-insert-sync")
+    if enable_vmi:
+        # VMI surface IR (``pto.vmi.*`` ops) must be lowered to VPTO via the
+        # VMI semantic pipeline before the generic VPTO lowering runs, or ops
+        # like ``pto.vmi.load`` survive unlowered into LLVM emission.
+        cmd.append("--enable-vmi")
     cmd.extend([
         "--enable-tile-op-expand",
         str(mlir_path),
@@ -214,6 +224,7 @@ def build_native_library(
             mode=module_spec.mode,
             insert_sync=module_spec.insert_sync,
         ),
+        enable_vmi=_mlir_uses_vmi_dialect(mlir_text),
         **_source_ptoas_overrides(module_spec),
     )
 

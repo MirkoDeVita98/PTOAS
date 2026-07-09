@@ -222,9 +222,38 @@ static ModuleOp cloneModuleForKind(ModuleOp source, FunctionKernelKind kind,
   return cloned;
 }
 
-static LogicalResult splitCVModule(ModuleOp module) {
-  if (hasKernelKind(module) || hasKernelKindChildModule(module))
+// When a module's (or a child module's) kernel_kind is already fixed -- e.g.
+// the frontend requested a single-kind kernel up front via
+// `@pto.jit(kernel_kind=...)` -- no cube/vector clone-and-split is needed.
+// However the traced IR may still wrap its body in a `pto.section.*` op (the
+// same wrapper used by mixed cube+vector kernels), so any such leftover
+// section must still be resolved for that fixed kind, or it survives into
+// later lowering stages that don't expect it (e.g. SCF-to-CF turns
+// `scf.if`/`scf.for` inside the section into multiple blocks, which then
+// trips the section op's SingleBlock verifier).
+static LogicalResult resolveSectionsForFixedKernelKind(ModuleOp module) {
+  auto kindAttr = module->getAttrOfType<FunctionKernelKindAttr>(
+      FunctionKernelKindAttr::name);
+  if (!kindAttr || !hasCVSections(module))
     return success();
+  if (failed(verifyNoNestedSections(module)))
+    return failure();
+  if (failed(verifyUniqueSectionKindsPerFunction(module)))
+    return failure();
+  rewriteSectionsForKind(module, kindAttr.getKernelKind());
+  return success();
+}
+
+static LogicalResult splitCVModule(ModuleOp module) {
+  if (hasKernelKind(module))
+    return resolveSectionsForFixedKernelKind(module);
+  if (hasKernelKindChildModule(module)) {
+    for (ModuleOp child : module.getOps<ModuleOp>())
+      if (hasKernelKind(child) &&
+          failed(resolveSectionsForFixedKernelKind(child)))
+        return failure();
+    return success();
+  }
   if (!hasCVSections(module))
     return success();
   if (failed(verifyNoNestedSections(module)))

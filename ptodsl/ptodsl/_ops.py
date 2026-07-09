@@ -1726,6 +1726,28 @@ def vshr(lhs, rhs, mask):
     return _emit_binary_vec_op(_pto.VshrOp, lhs, rhs, mask)
 
 
+def _vreg_pair_op(op_ctor, lhs, rhs, *, context: str):
+    lhs_value = unwrap_surface_value(lhs)
+    rhs_value = unwrap_surface_value(rhs)
+    if lhs_value.type != rhs_value.type:
+        raise TypeError(
+            f"{context} expects operands of matching vreg type, "
+            f"got {lhs_value.type} and {rhs_value.type}"
+        )
+    op = op_ctor(lhs_value.type, lhs_value.type, lhs_value, rhs_value)
+    return wrap_surface_value(op.low), wrap_surface_value(op.high)
+
+
+def vdintlv(lhs, rhs):
+    """``pto.vdintlv`` – deinterleave two vregs into low/high halves."""
+    return _vreg_pair_op(_pto.VdintlvOp, lhs, rhs, context="vdintlv(lhs, rhs)")
+
+
+def vintlv(lhs, rhs):
+    """``pto.vintlv`` – interleave two vregs into low/high halves."""
+    return _vreg_pair_op(_pto.VintlvOp, lhs, rhs, context="vintlv(lhs, rhs)")
+
+
 def vcmax(v, mask):
     """``pto.vcmax`` – cross-lane maximum reduction."""
     return _emit_unary_vec_op(_pto.VcmaxOp, v, mask)
@@ -5457,6 +5479,7 @@ __all__ = [
     "vbr",
     "vadd", "vsub", "vmul", "vdiv", "vmax", "vmin",
     "vand", "vor", "vxor", "vshl", "vshr",
+    "vdintlv", "vintlv",
     "vcmax", "vcadd", "vcmin", "vdup", "vexpdif",
     "vexp", "vln", "vsqrt", "vabs", "vneg", "vrec", "vrsqrt", "vrelu", "vnot",
     "vcgmax", "vcgadd", "vcgmin", "vcpadd",

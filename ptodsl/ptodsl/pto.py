@@ -96,6 +96,7 @@ from ._ops import (             # noqa: F401
     vbr,
     vadd, vsub, vmul, vdiv, vmax, vmin,
     vand, vor, vxor, vshl, vshr,
+    vdintlv, vintlv,
     vcmax, vcadd, vcmin, vdup, vexpdif,
     vexp, vln, vsqrt, vabs, vneg, vrec, vrsqrt, vrelu, vnot,
     vcgmax, vcgadd, vcgmin, vcpadd,
