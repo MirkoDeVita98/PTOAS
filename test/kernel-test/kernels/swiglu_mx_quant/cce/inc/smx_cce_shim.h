@@ -184,12 +184,23 @@ SMX_INTERNAL void DmaUb2GmY(
 
 SMX_INTERNAL void DmaUb2GmScale(
     __gm__ uint8_t *dst, __ubuf__ uint8_t *src,
-    uint16_t rowBlockSize, uint32_t burstLenBytes,
-    uint32_t dstStride310, uint32_t srcStride310,
+    uint32_t nRows, uint32_t rowBytes,
+    uint32_t dstRowStride, uint32_t srcRowStride,
     uint8_t bufId)
 {
     get_buf(PIPE_MTE3, bufId, false);
-    copy_ubuf_to_gm_align_v2(dst, src, 0, rowBlockSize, burstLenBytes, 0, dstStride310, srcStride310);
+    // SMX_FIXB: the e8m0 scale bytes are stored PK_B16 CONTIGUOUSLY in UB
+    // (row r's rowBytes scale bytes at src[r*srcRowStride], packed back-to-back).
+    // A single copy_ubuf_to_gm_align_v2 with nBurst>1 does not emit the trailing
+    // bursts on this target (only the first burst lands, so every row past row 0 read
+    // as zero -> scale_eq collapsed for >1 row/core). Issue one nBurst=1 burst per row
+    // instead, advancing the UB source by srcRowStride and the GM dest by dstRowStride
+    // (= outputScaleRowBytes, which also absorbs any GM row padding).
+    for (uint32_t r = 0; r < nRows; ++r) {
+        copy_ubuf_to_gm_align_v2(dst + (uint64_t)r * dstRowStride,
+                                 src + (uint64_t)r * srcRowStride,
+                                 0, 1, rowBytes, 0, 0, 0);
+    }
     rls_buf(PIPE_MTE3, bufId, false);
 }
 

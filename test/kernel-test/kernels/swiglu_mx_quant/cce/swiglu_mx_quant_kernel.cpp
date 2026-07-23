@@ -994,14 +994,15 @@ __global__ AICORE void swiglu_mx_quant_kernel(
                     static_cast<uint8_t>(BUF_ID_OUT0 + bufSet));
             }
 
-            uint32_t usedFactorDim1 = static_cast<uint32_t>(dim1AlignSizeNow / BLOCK_BYTE_32);
-            uint32_t sBurstLen = usedFactorDim1;
-            uint32_t sSrcStride = 0;
-            uint32_t sDstStride = static_cast<uint32_t>(outputScaleRowBytes - sBurstLen);
+            // SMX_FIXB: e8m0 scale bytes are stored PK_B16 CONTIGUOUSLY in UB (scaleBytesPerRow
+            // per row, packed back-to-back). Store them to GM one row per DMA burst.
+            uint32_t sScaleBytesPerRow = static_cast<uint32_t>(dim1AlignSizeNow / BLOCK_BYTE_32);
+            uint32_t sNRows = static_cast<uint32_t>(dim0Size);
+            uint32_t sDstRowStride = static_cast<uint32_t>(outputScaleRowBytes);
             scaleOffset = rowOffset * outputScaleRowBytes + dim1LoopIdx * factorDim1Size * SCALE_ONCE_NUM;
 
             DmaUb2GmScale(scaleGm + scaleOffset, mxScaleUb,
-                static_cast<uint16_t>(dim0Size), sBurstLen, sDstStride, sSrcStride,
+                sNRows, sScaleBytesPerRow, sDstRowStride, sScaleBytesPerRow,
                 static_cast<uint8_t>(BUF_ID_SCALE0 + bufSet));
 
             if (useDB) {
