@@ -975,22 +975,24 @@ __global__ AICORE void swiglu_mx_quant_kernel(
 
             int64_t yOffset, scaleOffset;
             if constexpr (IsFp4Out<OUT_KIND>()) {
-                uint32_t yBurstLen = static_cast<uint32_t>(dim1SizeNow / CONST_2);
-                uint32_t ySrcStride = AlignUp32(static_cast<uint32_t>((dim1AlignSizeNow / CONST_2 - yBurstLen)));
-                uint32_t yDstStride = static_cast<uint32_t>(dim1Size / CONST_4 - yBurstLen) + yBurstLen;
+                // SMX_FIXB: one nBurst=1 burst per row (see DmaUb2GmY).
+                uint32_t yRowBytes = static_cast<uint32_t>(dim1SizeNow / CONST_2);      // fp4: 2 elems/byte
+                uint32_t ySrcRowStride = static_cast<uint32_t>(dim1AlignSizeNow / CONST_2); // aligned UB row bytes
+                uint32_t yDstRowStride = static_cast<uint32_t>(dim1Size / CONST_4);     // full GM row pitch
                 yOffset = (rowOffset) * dim1Size / CONST_4 + dim1LoopIdx * factorDim1Size * QUANT_ONCE_NUM / CONST_2;
 
                 DmaUb2GmY(yGm + yOffset, outUb,
-                    static_cast<uint16_t>(dim0Size), yBurstLen, yDstStride, ySrcStride,
+                    static_cast<uint32_t>(dim0Size), yRowBytes, yDstRowStride, ySrcRowStride,
                     static_cast<uint8_t>(BUF_ID_OUT0 + bufSet));
             } else {
-                uint32_t yBurstLen = static_cast<uint32_t>(dim1SizeNow);
-                uint32_t ySrcStride = AlignUp32(static_cast<uint32_t>((dim1AlignSizeNow - yBurstLen)));
-                uint32_t yDstStride = static_cast<uint32_t>(halfInput - yBurstLen) + yBurstLen;
+                // SMX_FIXB: one nBurst=1 burst per row (see DmaUb2GmY).
+                uint32_t yRowBytes = static_cast<uint32_t>(dim1SizeNow);            // fp8: 1 byte/elem
+                uint32_t ySrcRowStride = static_cast<uint32_t>(dim1AlignSizeNow);   // aligned UB row bytes
+                uint32_t yDstRowStride = static_cast<uint32_t>(halfInput);          // full GM row pitch
                 yOffset = rowOffset * halfInput + dim1LoopIdx * factorDim1Size * QUANT_ONCE_NUM;
 
                 DmaUb2GmY(yGm + yOffset, outUb,
-                    static_cast<uint16_t>(dim0Size), yBurstLen, yDstStride, ySrcStride,
+                    static_cast<uint32_t>(dim0Size), yRowBytes, yDstRowStride, ySrcRowStride,
                     static_cast<uint8_t>(BUF_ID_OUT0 + bufSet));
             }
 

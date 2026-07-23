@@ -173,12 +173,23 @@ SMX_INTERNAL void DmaGm2Ub1D(
 
 SMX_INTERNAL void DmaUb2GmY(
     __gm__ uint8_t *dst, __ubuf__ uint8_t *src,
-    uint16_t rowBlockSize, uint32_t burstLenBytes,
-    uint32_t dstStride310, uint32_t srcStride310,
+    uint32_t nRows, uint32_t rowBytes,
+    uint32_t dstRowStride, uint32_t srcRowStride,
     uint8_t bufId)
 {
     get_buf(PIPE_MTE3, bufId, false);
-    copy_ubuf_to_gm_align_v2(dst, src, 0, rowBlockSize, burstLenBytes, 0, dstStride310, srcStride310);
+    // SMX_FIXB: same dropped-burst issue as DmaUb2GmScale -- a single
+    // copy_ubuf_to_gm_align_v2 with nBurst>1 only lands the first burst on this
+    // target, so batched (>1 row/core) stores wrote only row 0 of each core and
+    // rows 1+ read back as zero (y_match collapsed for >1 row/core). Issue one
+    // nBurst=1 burst per row instead: rowBytes valid bytes from the contiguous UB
+    // row (src advances by srcRowStride = aligned UB row bytes), landing at the GM
+    // row (dst advances by dstRowStride = the full GM row pitch).
+    for (uint32_t r = 0; r < nRows; ++r) {
+        copy_ubuf_to_gm_align_v2(dst + (uint64_t)r * dstRowStride,
+                                 src + (uint64_t)r * srcRowStride,
+                                 0, 1, rowBytes, 0, 0, 0);
+    }
     rls_buf(PIPE_MTE3, bufId, false);
 }
 
